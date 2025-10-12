@@ -31,7 +31,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: radial-gradient(circle at 50% 50%, #ff00ff22, transparent 70%);
+            background: radial-gradient(circle at 50% 50%, var(--theme-primary, #ff00ff22), transparent 70%);
             pointer-events: none;
             animation: pulse 4s ease-in-out infinite;
         }
@@ -52,13 +52,13 @@
             font-size: 4em;
             margin-bottom: 15px;
             letter-spacing: 20px;
-            background: linear-gradient(90deg, #ff00ff, #00ffff, #ff00ff);
+            background: linear-gradient(90deg, var(--theme-color1, #ff00ff), var(--theme-color2, #00ffff), var(--theme-color1, #ff00ff));
             background-size: 200% 200%;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
             animation: gradientShift 3s ease infinite;
-            filter: drop-shadow(0 0 30px #ff00ff) drop-shadow(0 0 60px #00ffff);
+            filter: drop-shadow(0 0 30px var(--theme-color1, #ff00ff)) drop-shadow(0 0 60px var(--theme-color2, #00ffff));
             font-weight: 900;
             text-transform: uppercase;
         }
@@ -75,15 +75,15 @@
             overflow: hidden;
             background: #000;
             box-shadow: 
-                0 0 50px rgba(255, 0, 255, 0.6),
-                0 0 100px rgba(0, 255, 255, 0.4);
+                0 0 50px rgba(var(--theme-rgb1, 255, 0, 255), 0.6),
+                0 0 100px rgba(var(--theme-rgb2, 0, 255, 255), 0.4);
         }
 
         #gameCanvas {
             display: block;
             background: #000;
             border: 4px solid;
-            border-image: linear-gradient(90deg, #ff00ff, #00ffff, #ff00ff) 1;
+            border-image: linear-gradient(90deg, var(--theme-color1, #ff00ff), var(--theme-color2, #00ffff), var(--theme-color1, #ff00ff)) 1;
         }
 
         .info {
@@ -98,14 +98,14 @@
         .score, .combo {
             font-size: 1.4em;
             font-weight: 900;
-            background: linear-gradient(90deg, #ff00ff, #00ffff);
+            background: linear-gradient(90deg, var(--theme-color1, #ff00ff), var(--theme-color2, #00ffff));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            filter: drop-shadow(0 0 20px #ff00ff);
+            filter: drop-shadow(0 0 20px var(--theme-color1, #ff00ff));
         }
 
-        .game-over, .start-screen {
+        .game-over, .start-screen, .menu-screen {
             position: absolute;
             top: 0;
             left: 0;
@@ -124,7 +124,7 @@
             display: none !important;
         }
 
-        .game-over h2 {
+        .game-over h2, .menu-screen h2 {
             font-size: 4em;
             margin-bottom: 30px;
             background: linear-gradient(90deg, #ff0055, #ff00ff);
@@ -137,18 +137,18 @@
         .start-screen h2 {
             font-size: 3em;
             margin-bottom: 30px;
-            background: linear-gradient(90deg, #00ffff, #ff00ff);
+            background: linear-gradient(90deg, var(--theme-color2, #00ffff), var(--theme-color1, #ff00ff));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            filter: drop-shadow(0 0 40px #00ffff);
+            filter: drop-shadow(0 0 40px var(--theme-color2, #00ffff));
         }
 
-        .game-over p, .start-screen p {
+        .game-over p, .start-screen p, .menu-screen p {
             font-size: 1.3em;
             margin-bottom: 12px;
             color: #fff;
-            text-shadow: 0 0 20px #ff00ff;
+            text-shadow: 0 0 20px var(--theme-color1, #ff00ff);
         }
 
         .final-stats {
@@ -159,7 +159,7 @@
         .restart-hint {
             margin-top: 30px;
             font-size: 1.3em;
-            background: linear-gradient(90deg, #ff00ff, #00ffff);
+            background: linear-gradient(90deg, var(--theme-color1, #ff00ff), var(--theme-color2, #00ffff));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -167,29 +167,36 @@
         }
 
         button {
-            margin-top: 30px;
-            padding: 20px 60px;
-            font-size: 1.5em;
+            margin: 15px 10px;
+            padding: 15px 40px;
+            font-size: 1.3em;
             font-weight: 900;
             font-family: 'Orbitron', sans-serif;
-            background: linear-gradient(90deg, #ff00ff, #00ffff);
+            background: linear-gradient(90deg, var(--theme-color1, #ff00ff), var(--theme-color2, #00ffff));
             color: #000;
             border: none;
             border-radius: 50px;
             cursor: pointer;
             transition: all 0.3s;
-            box-shadow: 0 0 40px rgba(255, 0, 255, 0.8);
+            box-shadow: 0 0 40px rgba(var(--theme-rgb1, 255, 0, 255), 0.8);
             text-transform: uppercase;
             letter-spacing: 3px;
         }
 
         button:hover {
             transform: scale(1.1);
-            box-shadow: 0 0 60px rgba(255, 0, 255, 1);
+            box-shadow: 0 0 60px rgba(var(--theme-rgb1, 255, 0, 255), 1);
         }
 
         button:active {
             transform: scale(0.95);
+        }
+
+        .button-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            padding: 12px 30px;
+            font-size: 1em;
         }
 
         .instructions {
@@ -198,6 +205,115 @@
             color: #888;
             letter-spacing: 2px;
         }
+
+        .leaderboard {
+            margin: 20px 0;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .leaderboard-entry {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 20px;
+            margin: 5px 0;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            min-width: 350px;
+        }
+
+        .leaderboard-entry.current {
+            background: rgba(255, 0, 255, 0.2);
+            box-shadow: 0 0 20px rgba(255, 0, 255, 0.5);
+        }
+
+        .theme-selector {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .theme-option {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .theme-option:hover {
+            transform: scale(1.2);
+        }
+
+        .theme-option.selected {
+            border-color: #fff;
+            box-shadow: 0 0 30px rgba(255, 255, 255, 0.8);
+        }
+
+        .theme-option.locked {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .theme-option.locked::after {
+            content: '🔒';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 24px;
+        }
+
+        .achievements {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin: 20px 0;
+        }
+
+        .achievement {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            min-width: 400px;
+        }
+
+        .achievement.unlocked {
+            background: rgba(0, 255, 136, 0.1);
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.3);
+        }
+
+        .achievement-icon {
+            font-size: 2em;
+            filter: grayscale(100%);
+        }
+
+        .achievement.unlocked .achievement-icon {
+            filter: grayscale(0%);
+        }
+
+        .daily-challenge {
+            background: rgba(255, 215, 0, 0.1);
+            border: 2px solid #ffd700;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            max-width: 400px;
+        }
+
+        .daily-challenge h3 {
+            color: #ffd700;
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
@@ -205,31 +321,341 @@
         <h1>POLARITY</h1>
         <div class="game-wrapper">
             <canvas id="gameCanvas" width="400" height="600"></canvas>
+            
+            <!-- Game Over Screen -->
             <div id="gameOver" class="game-over hidden">
                 <h2>GAME OVER</h2>
                 <div class="final-stats">
-                    <p>SCORE: <span id="finalScore" style="color: #ff00ff;">0</span></p>
-                    <p>MAX COMBO: <span id="finalCombo" style="color: #00ffff;">0</span>x</p>
+                    <p>SCORE: <span id="finalScore" style="color: var(--theme-color1, #ff00ff);">0</span></p>
+                    <p>MAX COMBO: <span id="finalCombo" style="color: var(--theme-color2, #00ffff);">0</span>x</p>
                     <p>HIGH SCORE: <span id="displayHighScore" style="color: #ffff00;">0</span></p>
                 </div>
+                <div id="newAchievements"></div>
                 <p class="restart-hint">▶ PRESS SPACE TO RESTART ◀</p>
+                <button class="button-secondary" onclick="showMenu()">MENU</button>
             </div>
+            
+            <!-- Start Screen -->
             <div id="startScreen" class="start-screen">
                 <h2>◤ POLARITY ◢</h2>
-                <p>▸ PRESS SPACE TO SWITCH SIDES ◂</p>
-                <p>▸ EACH SWITCH = +5 POINTS ◂</p>
-                <p>▸ DODGE OBSTACLES ◂</p>
+                <div id="dailyChallengeBox" class="daily-challenge">
+                    <h3>⭐ TODAY'S CHALLENGE</h3>
+                    <p id="dailyChallengeText">Loading...</p>
+                    <p id="dailyChallengeProgress" style="font-size: 0.9em; color: #888;"></p>
+                </div>
+                <p>▸ PRESS SPACE TO SWITCH (+5) ◂</p>
+                <p>▸ NEAR MISS = BONUS POINTS ◂</p>
                 <p>▸ BUILD MASSIVE COMBOS ◂</p>
                 <button id="startBtn">⚡ START ⚡</button>
+                <button class="button-secondary" onclick="showMenu()">MENU</button>
+            </div>
+            
+            <!-- Menu Screen -->
+            <div id="menuScreen" class="menu-screen hidden">
+                <h2>MENU</h2>
+                
+                <div style="margin: 30px 0;">
+                    <h3 style="color: var(--theme-color1, #ff00ff); margin-bottom: 20px;">🏆 LEADERBOARD</h3>
+                    <div class="leaderboard" id="leaderboard"></div>
+                </div>
+                
+                <div style="margin: 30px 0;">
+                    <h3 style="color: var(--theme-color2, #00ffff); margin-bottom: 20px;">🎨 THEMES</h3>
+                    <p style="font-size: 0.9em; color: #888; margin-bottom: 15px;">Unlock themes by reaching score milestones!</p>
+                    <div class="theme-selector" id="themeSelector"></div>
+                </div>
+                
+                <div style="margin: 30px 0;">
+                    <h3 style="color: #ffff00; margin-bottom: 20px;">🏅 ACHIEVEMENTS</h3>
+                    <div class="achievements" id="achievements"></div>
+                </div>
+                
+                <button onclick="hideMenu()">BACK</button>
             </div>
         </div>
         <div class="info">
             <div class="score">SCORE: <span id="score">0</span></div>
             <div class="combo" id="comboDisplay" style="display: none;">COMBO: <span id="combo">0</span>x</div>
         </div>
-        <div class="instructions">◆ SPACEBAR TO SWITCH (+5 PTS) ◆ SURVIVE ◆</div>
+        <div class="instructions">◆ SPACEBAR TO SWITCH (+5 PTS) ◆ SURVIVE ◆ <button class="button-secondary" onclick="toggleSound()" style="padding: 5px 15px; font-size: 0.8em; margin-left: 10px;">🔊 SOUND: <span id="soundStatus">ON</span></button></div>
     </div>
     <script>
+        // ===== AUDIO SYSTEM =====
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContext();
+        let soundEnabled = true;
+
+        function playSound(type) {
+            if (!soundEnabled) return;
+            
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            
+            switch(type) {
+                case 'switch':
+                    oscillator.frequency.setValueAtTime(400, audioCtx.currentTime);
+                    oscillator.frequency.exponentialRampToValueAtTime(600, audioCtx.currentTime + 0.1);
+                    gainNode.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+                    oscillator.start(audioCtx.currentTime);
+                    oscillator.stop(audioCtx.currentTime + 0.1);
+                    break;
+                    
+                case 'close':
+                    oscillator.frequency.setValueAtTime(800, audioCtx.currentTime);
+                    gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+                    oscillator.start(audioCtx.currentTime);
+                    oscillator.stop(audioCtx.currentTime + 0.15);
+                    break;
+                    
+                case 'closer':
+                    oscillator.frequency.setValueAtTime(1000, audioCtx.currentTime);
+                    oscillator.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.1);
+                    gainNode.gain.setValueAtTime(0.25, audioCtx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+                    oscillator.start(audioCtx.currentTime);
+                    oscillator.stop(audioCtx.currentTime + 0.2);
+                    break;
+                    
+                case 'insane':
+                    oscillator.frequency.setValueAtTime(1400, audioCtx.currentTime);
+                    oscillator.frequency.exponentialRampToValueAtTime(2000, audioCtx.currentTime + 0.15);
+                    gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
+                    oscillator.start(audioCtx.currentTime);
+                    oscillator.stop(audioCtx.currentTime + 0.25);
+                    break;
+                    
+                case 'combo':
+                    oscillator.frequency.setValueAtTime(600, audioCtx.currentTime);
+                    oscillator.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.2);
+                    gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                    oscillator.start(audioCtx.currentTime);
+                    oscillator.stop(audioCtx.currentTime + 0.3);
+                    break;
+                    
+                case 'death':
+                    oscillator.frequency.setValueAtTime(400, audioCtx.currentTime);
+                    oscillator.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.5);
+                    gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+                    oscillator.start(audioCtx.currentTime);
+                    oscillator.stop(audioCtx.currentTime + 0.5);
+                    break;
+            }
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            document.getElementById('soundStatus').textContent = soundEnabled ? 'ON' : 'OFF';
+            localStorage.setItem('soundEnabled', soundEnabled);
+        }
+
+        // Load sound preference
+        if (localStorage.getItem('soundEnabled') === 'false') {
+            soundEnabled = false;
+            document.getElementById('soundStatus').textContent = 'OFF';
+        }
+
+        // ===== THEMES =====
+        const THEMES = {
+            neon: { name: 'Neon', color1: '#ff00ff', color2: '#00ffff', rgb1: '255, 0, 255', rgb2: '0, 255, 255', unlock: 0 },
+            fire: { name: 'Fire', color1: '#ff4400', color2: '#ffaa00', rgb1: '255, 68, 0', rgb2: '255, 170, 0', unlock: 100 },
+            ocean: { name: 'Ocean', color1: '#0044ff', color2: '#00ffff', rgb1: '0, 68, 255', rgb2: '0, 255, 255', unlock: 250 },
+            poison: { name: 'Poison', color1: '#88ff00', color2: '#00ff88', rgb1: '136, 255, 0', rgb2: '0, 255, 136', unlock: 500 },
+            sunset: { name: 'Sunset', color1: '#ff0066', color2: '#ff9900', rgb1: '255, 0, 102', rgb2: '255, 153, 0', unlock: 750 },
+            galaxy: { name: 'Galaxy', color1: '#9900ff', color2: '#ff00cc', rgb1: '153, 0, 255', rgb2: '255, 0, 204', unlock: 1000 }
+        };
+
+        let currentTheme = localStorage.getItem('currentTheme') || 'neon';
+
+        function applyTheme(themeName) {
+            const theme = THEMES[themeName];
+            document.documentElement.style.setProperty('--theme-color1', theme.color1);
+            document.documentElement.style.setProperty('--theme-color2', theme.color2);
+            document.documentElement.style.setProperty('--theme-rgb1', theme.rgb1);
+            document.documentElement.style.setProperty('--theme-rgb2', theme.rgb2);
+            document.documentElement.style.setProperty('--theme-primary', theme.color1 + '22');
+            currentTheme = themeName;
+            localStorage.setItem('currentTheme', themeName);
+        }
+
+        function renderThemeSelector() {
+            const highScore = parseInt(localStorage.getItem('polarityHighScore')) || 0;
+            const selector = document.getElementById('themeSelector');
+            selector.innerHTML = '';
+            
+            Object.entries(THEMES).forEach(([key, theme]) => {
+                const div = document.createElement('div');
+                div.className = 'theme-option';
+                div.style.background = `linear-gradient(135deg, ${theme.color1}, ${theme.color2})`;
+                
+                const unlocked = highScore >= theme.unlock;
+                if (!unlocked) div.classList.add('locked');
+                if (key === currentTheme) div.classList.add('selected');
+                
+                div.title = `${theme.name} - ${unlocked ? 'Unlocked!' : 'Unlock at ' + theme.unlock + ' points'}`;
+                
+                if (unlocked) {
+                    div.onclick = () => {
+                        applyTheme(key);
+                        renderThemeSelector();
+                    };
+                }
+                
+                selector.appendChild(div);
+            });
+        }
+
+        // ===== ACHIEVEMENTS =====
+        const ACHIEVEMENTS = [
+            { id: 'first_game', name: 'First Steps', desc: 'Play your first game', icon: '🎮', check: (stats) => stats.gamesPlayed >= 1 },
+            { id: 'score_100', name: 'Century', desc: 'Score 100 points', icon: '💯', check: (stats) => stats.highScore >= 100 },
+            { id: 'score_500', name: 'Veteran', desc: 'Score 500 points', icon: '⭐', check: (stats) => stats.highScore >= 500 },
+            { id: 'score_1000', name: 'Master', desc: 'Score 1000 points', icon: '👑', check: (stats) => stats.highScore >= 1000 },
+            { id: 'combo_20', name: 'Combo King', desc: 'Get a 20x combo', icon: '🔥', check: (stats) => stats.maxCombo >= 20 },
+            { id: 'combo_50', name: 'Unstoppable', desc: 'Get a 50x combo', icon: '⚡', check: (stats) => stats.maxCombo >= 50 },
+            { id: 'near_miss_50', name: 'Close Shave', desc: 'Get 50 near misses', icon: '😰', check: (stats) => stats.totalNearMisses >= 50 },
+            { id: 'switches_100', name: 'Switch Master', desc: 'Switch 100 times', icon: '🔄', check: (stats) => stats.totalSwitches >= 100 },
+            { id: 'games_10', name: 'Dedicated', desc: 'Play 10 games', icon: '🎯', check: (stats) => stats.gamesPlayed >= 10 }
+        ];
+
+        function checkAchievements(stats) {
+            const unlockedAchievements = JSON.parse(localStorage.getItem('achievements') || '[]');
+            const newAchievements = [];
+            
+            ACHIEVEMENTS.forEach(achievement => {
+                if (!unlockedAchievements.includes(achievement.id) && achievement.check(stats)) {
+                    unlockedAchievements.push(achievement.id);
+                    newAchievements.push(achievement);
+                }
+            });
+            
+            if (newAchievements.length > 0) {
+                localStorage.setItem('achievements', JSON.stringify(unlockedAchievements));
+            }
+            
+            return newAchievements;
+        }
+
+        function renderAchievements() {
+            const container = document.getElementById('achievements');
+            const unlockedAchievements = JSON.parse(localStorage.getItem('achievements') || '[]');
+            
+            container.innerHTML = '';
+            ACHIEVEMENTS.forEach(achievement => {
+                const div = document.createElement('div');
+                div.className = 'achievement';
+                if (unlockedAchievements.includes(achievement.id)) {
+                    div.classList.add('unlocked');
+                }
+                
+                div.innerHTML = `
+                    <div class="achievement-icon">${achievement.icon}</div>
+                    <div style="flex: 1; text-align: left;">
+                        <div style="font-weight: bold;">${achievement.name}</div>
+                        <div style="font-size: 0.8em; color: #888;">${achievement.desc}</div>
+                    </div>
+                `;
+                
+                container.appendChild(div);
+            });
+        }
+
+        // ===== DAILY CHALLENGE =====
+        function getDailyChallenge() {
+            const today = new Date().toDateString();
+            const challenges = [
+                { desc: 'Get 10 INSANE near misses', target: 10, key: 'insaneNearMisses' },
+                { desc: 'Reach a 30x combo', target: 30, key: 'maxCombo' },
+                { desc: 'Score 500 points', target: 500, key: 'score' },
+                { desc: 'Get 20 near misses', target: 20, key: 'nearMisses' },
+                { desc: 'Switch sides 50 times', target: 50, key: 'switches' }
+            ];
+            
+            const dayIndex = new Date().getDate() % challenges.length;
+            const challenge = challenges[dayIndex];
+            
+            const completed = JSON.parse(localStorage.getItem('dailyChallenges') || '{}');
+            const isCompleted = completed[today] === true;
+            
+            return { ...challenge, today, isCompleted };
+        }
+
+        function updateDailyChallenge(stats) {
+            const challenge = getDailyChallenge();
+            const progress = stats[challenge.key] || 0;
+            
+            document.getElementById('dailyChallengeText').textContent = challenge.desc;
+            document.getElementById('dailyChallengeProgress').textContent = 
+                challenge.isCompleted ? '✅ COMPLETED!' : `Progress: ${Math.min(progress, challenge.target)}/${challenge.target}`;
+            
+            if (progress >= challenge.target && !challenge.isCompleted) {
+                const completed = JSON.parse(localStorage.getItem('dailyChallenges') || '{}');
+                completed[challenge.today] = true;
+                localStorage.setItem('dailyChallenges', JSON.stringify(completed));
+                return true;
+            }
+            
+            return false;
+        }
+
+        // ===== LEADERBOARD =====
+        function saveScore(score, combo) {
+            const leaderboard = JSON.parse(localStorage.getItem('leaderboard') || '[]');
+            leaderboard.push({ score, combo, date: new Date().toISOString() });
+            leaderboard.sort((a, b) => b.score - a.score);
+            leaderboard.splice(10); // Keep top 10
+            localStorage.setItem('leaderboard', JSON.stringify(leaderboard));
+        }
+
+        function renderLeaderboard(currentScore = null) {
+            const leaderboard = JSON.parse(localStorage.getItem('leaderboard') || '[]');
+            const container = document.getElementById('leaderboard');
+            
+            if (leaderboard.length === 0) {
+                container.innerHTML = '<p style="color: #888;">No scores yet. Play to set a record!</p>';
+                return;
+            }
+            
+            container.innerHTML = '';
+            leaderboard.forEach((entry, i) => {
+                const div = document.createElement('div');
+                div.className = 'leaderboard-entry';
+                if (entry.score === currentScore) {
+                    div.classList.add('current');
+                }
+                
+                const rank = ['🥇', '🥈', '🥉'][i] || `${i + 1}.`;
+                div.innerHTML = `
+                    <span>${rank} ${entry.score} pts</span>
+                    <span style="color: #888;">${entry.combo}x combo</span>
+                `;
+                
+                container.appendChild(div);
+            });
+        }
+
+        // ===== MENU =====
+        function showMenu() {
+            document.getElementById('menuScreen').classList.remove('hidden');
+            document.getElementById('gameOver').classList.add('hidden');
+            document.getElementById('startScreen').classList.add('hidden');
+            renderLeaderboard();
+            renderThemeSelector();
+            renderAchievements();
+        }
+
+        function hideMenu() {
+            document.getElementById('menuScreen').classList.add('hidden');
+            document.getElementById('startScreen').classList.remove('hidden');
+        }
+
+        // ===== GAME CODE =====
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const scoreElement = document.getElementById('score');
@@ -278,7 +704,10 @@
             trails: [],
             screenShake: 0,
             floatingTexts: [],
-            time: 0
+            time: 0,
+            switches: 0,
+            nearMisses: 0,
+            insaneNearMisses: 0
         };
 
         document.addEventListener('keydown', (e) => {
@@ -292,11 +721,12 @@
                     switchSides();
                     createSwitchParticles();
                     gameState.screenShake = 6;
+                    gameState.switches++;
                     
-                    // +5 points for switching!
                     gameState.score += 5;
                     scoreElement.textContent = gameState.score;
-                    addFloatingText('+5', gameState.magnetX, gameState.magnetY - 30, '#00ffff', 20);
+                    addFloatingText('+5', gameState.magnetX, gameState.magnetY - 30, THEMES[currentTheme].color2, 20);
+                    playSound('switch');
                 }
             }
         });
@@ -324,11 +754,15 @@
                 trails: [],
                 screenShake: 0,
                 floatingTexts: [],
-                time: 0
+                time: 0,
+                switches: 0,
+                nearMisses: 0,
+                insaneNearMisses: 0
             };
             
             startScreen.classList.add('hidden');
             gameOverScreen.classList.add('hidden');
+            document.getElementById('menuScreen').classList.add('hidden');
             scoreElement.textContent = '0';
             comboDisplay.style.display = 'none';
             
@@ -342,7 +776,6 @@
         }
 
         function createSwitchParticles() {
-            // Reduced from 30 to 12 for performance
             for (let i = 0; i < 12; i++) {
                 const angle = (Math.PI * 2 * i) / 12;
                 gameState.particles.push({
@@ -352,13 +785,12 @@
                     vy: Math.sin(angle) * (4 + Math.random() * 3),
                     life: 1,
                     size: 3 + Math.random() * 3,
-                    color: ['#ff00ff', '#00ffff'][Math.floor(Math.random() * 2)]
+                    color: [THEMES[currentTheme].color1, THEMES[currentTheme].color2][Math.floor(Math.random() * 2)]
                 });
             }
         }
 
         function createExplosion(x, y, count = 20) {
-            // Reduced from 50 to 20
             for (let i = 0; i < count; i++) {
                 const angle = (Math.PI * 2 * i) / count;
                 gameState.particles.push({
@@ -368,7 +800,7 @@
                     vy: Math.sin(angle) * (3 + Math.random() * 5),
                     life: 1,
                     size: 2 + Math.random() * 4,
-                    color: ['#ff0055', '#ff00ff'][Math.floor(Math.random() * 2)]
+                    color: ['#ff0055', THEMES[currentTheme].color1][Math.floor(Math.random() * 2)]
                 });
             }
         }
@@ -417,11 +849,10 @@
                     x: gameState.magnetX,
                     y: gameState.magnetY,
                     life: 1,
-                    color: gameState.magnetSide === 'left' ? '#ff00ff' : '#00ffff'
+                    color: gameState.magnetSide === 'left' ? THEMES[currentTheme].color1 : THEMES[currentTheme].color2
                 });
             }
 
-            // Reduced from 20 to 10
             if (gameState.trails.length > 10) {
                 gameState.trails.shift();
             }
@@ -496,6 +927,7 @@
                 if (checkCollision(obstacle)) {
                     createExplosion(gameState.magnetX, gameState.magnetY, 30);
                     gameState.screenShake = 25;
+                    playSound('death');
                     endGame();
                     return;
                 }
@@ -504,13 +936,38 @@
                     obstacle.dodged = true;
                     const dist = Math.abs(obstacle.x - gameState.magnetX);
                     
-                    if (dist < 70) {
-                        const bonus = 25;
+                    // Tiered near-miss system
+                    if (dist < 40) {
+                        // INSANE near miss (< 40px)
+                        const bonus = 50;
                         gameState.score += bonus;
                         gameState.combo++;
-                        addFloatingText('CLOSE! +' + bonus, obstacle.x, obstacle.y, '#ffff00', 26);
+                        gameState.nearMisses++;
+                        gameState.insaneNearMisses++;
+                        addFloatingText('🔥 INSANE! +' + bonus, obstacle.x, obstacle.y, '#ff00ff', 32);
+                        createExplosion(obstacle.x, obstacle.y, 15);
+                        gameState.screenShake = 8;
+                        playSound('insane');
+                    } else if (dist < 60) {
+                        // CLOSER near miss (40-60px)
+                        const bonus = 35;
+                        gameState.score += bonus;
+                        gameState.combo++;
+                        gameState.nearMisses++;
+                        addFloatingText('💥 CLOSER! +' + bonus, obstacle.x, obstacle.y, '#00ffff', 28);
                         createExplosion(obstacle.x, obstacle.y, 12);
-                        gameState.screenShake = 4;
+                        gameState.screenShake = 5;
+                        playSound('closer');
+                    } else if (dist < 80) {
+                        // CLOSE near miss (60-80px)
+                        const bonus = 20;
+                        gameState.score += bonus;
+                        gameState.combo++;
+                        gameState.nearMisses++;
+                        addFloatingText('✨ CLOSE! +' + bonus, obstacle.x, obstacle.y, '#ffff00', 26);
+                        createExplosion(obstacle.x, obstacle.y, 8);
+                        gameState.screenShake = 3;
+                        playSound('close');
                     } else {
                         gameState.combo++;
                     }
@@ -524,7 +981,8 @@
                         }
                         
                         if (gameState.combo % 10 === 0) {
-                            addFloatingText('★ ' + gameState.combo + 'x COMBO! ★', canvas.width / 2, canvas.height / 3, '#ff00ff', 30);
+                            addFloatingText('★ ' + gameState.combo + 'x COMBO! ★', canvas.width / 2, canvas.height / 3, THEMES[currentTheme].color1, 30);
+                            playSound('combo');
                         }
                     }
                 }
@@ -542,7 +1000,7 @@
                         gameState.difficulty += 0.15;
                         gameState.obstacleSpeed = INITIAL_OBSTACLE_SPEED + gameState.difficulty * 0.65;
                         gameState.spawnRate = Math.max(35, INITIAL_SPAWN_RATE - gameState.difficulty * 6);
-                        addFloatingText('◆ SPEED UP! ◆', canvas.width / 2, canvas.height / 2, '#00ffff', 28);
+                        addFloatingText('◆ SPEED UP! ◆', canvas.width / 2, canvas.height / 2, THEMES[currentTheme].color2, 28);
                     }
                 }
             }
@@ -570,7 +1028,6 @@
         function drawGame() {
             ctx.save();
             
-            // Screen shake
             if (gameState.screenShake > 0) {
                 ctx.translate(
                     (Math.random() - 0.5) * gameState.screenShake,
@@ -578,12 +1035,10 @@
                 );
             }
             
-            // Background
             ctx.fillStyle = '#000000';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
-            // Simplified grid (only draw every other line for performance)
-            ctx.strokeStyle = 'rgba(255, 0, 255, 0.05)';
+            ctx.strokeStyle = `rgba(${THEMES[currentTheme].rgb1}, 0.05)`;
             ctx.lineWidth = 1;
             for (let i = 0; i < canvas.width; i += 60) {
                 ctx.beginPath();
@@ -598,18 +1053,16 @@
                 ctx.stroke();
             }
             
-            // Walls with glow
             ctx.shadowBlur = 35;
-            ctx.shadowColor = '#ff00ff';
-            ctx.fillStyle = '#ff00ff';
+            ctx.shadowColor = THEMES[currentTheme].color1;
+            ctx.fillStyle = THEMES[currentTheme].color1;
             ctx.fillRect(0, 0, WALL_WIDTH, canvas.height);
             
-            ctx.shadowColor = '#00ffff';
-            ctx.fillStyle = '#00ffff';
+            ctx.shadowColor = THEMES[currentTheme].color2;
+            ctx.fillStyle = THEMES[currentTheme].color2;
             ctx.fillRect(canvas.width - WALL_WIDTH, 0, WALL_WIDTH, canvas.height);
             ctx.shadowBlur = 0;
             
-            // Trails
             gameState.trails.forEach((t) => {
                 if (t.life > 0) {
                     ctx.save();
@@ -624,7 +1077,6 @@
                 }
             });
             
-            // Particles
             gameState.particles.forEach(p => {
                 ctx.save();
                 ctx.globalAlpha = p.life;
@@ -637,15 +1089,12 @@
                 ctx.restore();
             });
             
-            // Obstacles
             gameState.obstacles.forEach(obstacle => {
                 drawObstacle(obstacle);
             });
             
-            // Magnet
             drawMagnet(gameState.magnetX, gameState.magnetY, gameState.magnetRotation);
             
-            // Floating texts
             gameState.floatingTexts.forEach(t => {
                 ctx.save();
                 ctx.globalAlpha = t.life;
@@ -674,11 +1123,11 @@
             
             const colors = {
                 'bolt': '#ff0055',
-                'wrench': '#ff00ff',
+                'wrench': THEMES[currentTheme].color1,
                 'gear': '#ff0088',
                 'hammer': '#ff0066',
                 'lightning': '#ffff00',
-                'diamond': '#00ffff'
+                'diamond': THEMES[currentTheme].color2
             };
             
             ctx.shadowBlur = 25;
@@ -774,26 +1223,24 @@
             const thickness = 12;
             
             ctx.shadowBlur = 40;
-            ctx.shadowColor = gameState.magnetSide === 'left' ? '#ff00ff' : '#00ffff';
+            ctx.shadowColor = gameState.magnetSide === 'left' ? THEMES[currentTheme].color1 : THEMES[currentTheme].color2;
             
             const magnetGrad = ctx.createLinearGradient(-w/2, 0, w/2, 0);
-            magnetGrad.addColorStop(0, '#ff00ff');
+            magnetGrad.addColorStop(0, THEMES[currentTheme].color1);
             magnetGrad.addColorStop(0.5, '#ffffff');
-            magnetGrad.addColorStop(1, '#00ffff');
+            magnetGrad.addColorStop(1, THEMES[currentTheme].color2);
             
             ctx.fillStyle = magnetGrad;
             ctx.fillRect(-w/2, -h/2, thickness, h);
             ctx.fillRect(w/2 - thickness, -h/2, thickness, h);
             ctx.fillRect(-w/2, h/2 - thickness, w, thickness);
             
-            // Caps
             ctx.shadowBlur = 50;
             ctx.shadowColor = '#ffffff';
             ctx.fillStyle = '#ffffff';
             ctx.fillRect(-w/2 - 2, -h/2 - 6, thickness + 4, 8);
             ctx.fillRect(w/2 - thickness - 2, -h/2 - 6, thickness + 4, 8);
             
-            // Labels
             ctx.shadowBlur = 15;
             ctx.fillStyle = '#000';
             ctx.font = 'bold 16px Orbitron';
@@ -816,6 +1263,48 @@
             }
             displayHighScoreElement.textContent = highScore;
             
+            saveScore(gameState.score, gameState.maxCombo);
+            
+            const gamesPlayed = parseInt(localStorage.getItem('gamesPlayed') || '0') + 1;
+            const totalSwitches = parseInt(localStorage.getItem('totalSwitches') || '0') + gameState.switches;
+            const totalNearMisses = parseInt(localStorage.getItem('totalNearMisses') || '0') + gameState.nearMisses;
+            localStorage.setItem('gamesPlayed', gamesPlayed);
+            localStorage.setItem('totalSwitches', totalSwitches);
+            localStorage.setItem('totalNearMisses', totalNearMisses);
+            
+            const stats = {
+                highScore,
+                maxCombo: Math.max(gameState.maxCombo, parseInt(localStorage.getItem('maxCombo') || '0')),
+                gamesPlayed,
+                totalSwitches,
+                totalNearMisses
+            };
+            localStorage.setItem('maxCombo', stats.maxCombo);
+            
+            const newAchievements = checkAchievements(stats);
+            const achievementsDiv = document.getElementById('newAchievements');
+            if (newAchievements.length > 0) {
+                achievementsDiv.innerHTML = '<h3 style="color: #00ff88; margin: 20px 0;">🎉 NEW ACHIEVEMENTS!</h3>' +
+                    newAchievements.map(a => `<p style="font-size: 1.2em;">${a.icon} ${a.name}</p>`).join('');
+                newAchievements.forEach(() => playSound('combo'));
+            } else {
+                achievementsDiv.innerHTML = '';
+            }
+            
+            // Update daily challenge
+            const challengeCompleted = updateDailyChallenge({
+                score: gameState.score,
+                maxCombo: gameState.maxCombo,
+                nearMisses: gameState.nearMisses,
+                insaneNearMisses: gameState.insaneNearMisses,
+                switches: gameState.switches
+            });
+            
+            if (challengeCompleted) {
+                achievementsDiv.innerHTML += '<p style="color: #ffd700; font-size: 1.3em; margin-top: 15px;">⭐ DAILY CHALLENGE COMPLETED! ⭐</p>';
+                playSound('combo');
+            }
+            
             setTimeout(() => {
                 gameOverScreen.classList.remove('hidden');
             }, 200);
@@ -830,6 +1319,9 @@
             requestAnimationFrame(gameLoop);
         }
 
+        // Initialize
+        applyTheme(currentTheme);
+        updateDailyChallenge({});
         drawGame();
     </script>
 </body>
