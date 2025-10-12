@@ -2,7 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>POLARITY</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@900&display=swap');
@@ -11,6 +13,10 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
         }
 
         body {
@@ -22,6 +28,7 @@
             min-height: 100vh;
             overflow: hidden;
             position: relative;
+            touch-action: none;
         }
 
         body::before {
@@ -43,9 +50,16 @@
 
         .container {
             text-align: center;
-            padding: 20px;
+            padding: 10px;
             position: relative;
             z-index: 1;
+            max-width: 100vw;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 5px;
+            }
         }
 
         h1 {
@@ -61,6 +75,14 @@
             filter: drop-shadow(0 0 30px var(--theme-color1, #ff00ff)) drop-shadow(0 0 60px var(--theme-color2, #00ffff));
             font-weight: 900;
             text-transform: uppercase;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.5em;
+                letter-spacing: 10px;
+                margin-bottom: 10px;
+            }
         }
 
         @keyframes gradientShift {
@@ -84,6 +106,16 @@
             background: #000;
             border: 4px solid;
             border-image: linear-gradient(90deg, var(--theme-color1, #ff00ff), var(--theme-color2, #00ffff), var(--theme-color1, #ff00ff)) 1;
+            max-width: 100vw;
+            max-height: 80vh;
+            cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+            #gameCanvas {
+                border-width: 2px;
+                max-height: 70vh;
+            }
         }
 
         .info {
@@ -204,6 +236,60 @@
             font-size: 0.9em;
             color: #888;
             letter-spacing: 2px;
+        }
+
+        @media (max-width: 768px) {
+            .instructions {
+                font-size: 0.7em;
+                margin-top: 10px;
+            }
+            
+            .info {
+                font-size: 0.9em;
+            }
+            
+            .score, .combo {
+                font-size: 1.2em;
+            }
+            
+            button {
+                padding: 12px 30px;
+                font-size: 1em;
+            }
+            
+            .game-over h2, .menu-screen h2 {
+                font-size: 2.5em;
+            }
+            
+            .start-screen h2 {
+                font-size: 2em;
+            }
+            
+            .final-stats {
+                font-size: 1.2em;
+            }
+        }
+
+        .mobile-hint {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 0, 255, 0.2);
+            border: 2px solid var(--theme-color1, #ff00ff);
+            border-radius: 20px;
+            padding: 15px 30px;
+            font-size: 1.2em;
+            color: #fff;
+            z-index: 100;
+            animation: pulse 1.5s infinite;
+        }
+
+        @media (max-width: 768px) {
+            .mobile-hint.show {
+                display: block;
+            }
         }
 
         .leaderboard {
@@ -343,7 +429,7 @@
                     <p id="dailyChallengeText">Loading...</p>
                     <p id="dailyChallengeProgress" style="font-size: 0.9em; color: #888;"></p>
                 </div>
-                <p>▸ PRESS SPACE TO SWITCH (+5) ◂</p>
+                <p id="startInstructions1">▸ PRESS SPACE TO SWITCH (+5) ◂</p>
                 <p>▸ NEAR MISS = BONUS POINTS ◂</p>
                 <p>▸ BUILD MASSIVE COMBOS ◂</p>
                 <button id="startBtn">⚡ START ⚡</button>
@@ -377,8 +463,12 @@
             <div class="score">SCORE: <span id="score">0</span></div>
             <div class="combo" id="comboDisplay" style="display: none;">COMBO: <span id="combo">0</span>x</div>
         </div>
-        <div class="instructions">◆ SPACEBAR TO SWITCH (+5 PTS) ◆ SURVIVE ◆ <button class="button-secondary" onclick="toggleSound()" style="padding: 5px 15px; font-size: 0.8em; margin-left: 10px;">🔊 SOUND: <span id="soundStatus">ON</span></button></div>
+        <div class="instructions">
+            <span id="controlHint">◆ SPACEBAR TO SWITCH (+5 PTS) ◆ SURVIVE ◆</span>
+            <button class="button-secondary" onclick="toggleSound()" style="padding: 5px 15px; font-size: 0.8em; margin-left: 10px;">🔊 SOUND: <span id="soundStatus">ON</span></button>
+        </div>
     </div>
+    <div id="mobileHint" class="mobile-hint">👆 TAP TO SWITCH</div>
     <script>
         // ===== AUDIO SYSTEM =====
         const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -655,6 +745,19 @@
             document.getElementById('startScreen').classList.remove('hidden');
         }
 
+        // ===== MOBILE DETECTION =====
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+                         ('ontouchstart' in window) || 
+                         (navigator.maxTouchPoints > 0);
+
+        if (isMobile) {
+            document.getElementById('controlHint').textContent = '◆ TAP TO SWITCH (+5 PTS) ◆ SURVIVE ◆';
+            // Prevent viewport zoom
+            document.addEventListener('touchmove', (e) => {
+                if (e.scale !== 1) { e.preventDefault(); }
+            }, { passive: false });
+        }
+
         // ===== GAME CODE =====
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
@@ -710,25 +813,54 @@
             insaneNearMisses: 0
         };
 
+        // Unified input handler
+        function handleGameInput() {
+            if (!gameState.isPlaying && !gameOverScreen.classList.contains('hidden')) {
+                startGame();
+            } else if (!gameState.isPlaying && !startScreen.classList.contains('hidden')) {
+                startGame();
+            } else if (gameState.isPlaying) {
+                switchSides();
+                createSwitchParticles();
+                gameState.screenShake = 6;
+                gameState.switches++;
+                
+                gameState.score += 5;
+                scoreElement.textContent = gameState.score;
+                addFloatingText('+5', gameState.magnetX, gameState.magnetY - 30, THEMES[currentTheme].color2, 20);
+                playSound('switch');
+            }
+        }
+
+        // Keyboard controls
         document.addEventListener('keydown', (e) => {
             if (e.code === 'Space') {
                 e.preventDefault();
-                if (!gameState.isPlaying && !gameOverScreen.classList.contains('hidden')) {
-                    startGame();
-                } else if (!gameState.isPlaying && !startScreen.classList.contains('hidden')) {
-                    startGame();
-                } else if (gameState.isPlaying) {
-                    switchSides();
-                    createSwitchParticles();
-                    gameState.screenShake = 6;
-                    gameState.switches++;
-                    
-                    gameState.score += 5;
-                    scoreElement.textContent = gameState.score;
-                    addFloatingText('+5', gameState.magnetX, gameState.magnetY - 30, THEMES[currentTheme].color2, 20);
-                    playSound('switch');
-                }
+                handleGameInput();
             }
+        });
+
+        // Touch/tap controls
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            handleGameInput();
+            
+            // Show mobile hint briefly on first tap
+            if (isMobile && !localStorage.getItem('mobileHintShown')) {
+                const hint = document.getElementById('mobileHint');
+                hint.classList.add('show');
+                setTimeout(() => {
+                    hint.classList.remove('show');
+                }, 2000);
+                localStorage.setItem('mobileHintShown', 'true');
+            }
+        }, { passive: false });
+
+        // Click controls (for both desktop and mobile)
+        canvas.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (!isMobile) return; // Only use click on mobile as fallback
+            handleGameInput();
         });
 
         startBtn.addEventListener('click', startGame);
@@ -1323,6 +1455,21 @@
         applyTheme(currentTheme);
         updateDailyChallenge({});
         drawGame();
+
+        // Update UI for mobile
+        if (isMobile) {
+            document.getElementById('startInstructions1').textContent = '▸ TAP SCREEN TO SWITCH (+5) ◂';
+            
+            // Adjust canvas size for mobile
+            const maxWidth = Math.min(400, window.innerWidth - 20);
+            const maxHeight = Math.min(600, window.innerHeight * 0.7);
+            const scale = Math.min(maxWidth / 400, maxHeight / 600);
+            
+            if (scale < 1) {
+                canvas.style.width = (400 * scale) + 'px';
+                canvas.style.height = (600 * scale) + 'px';
+            }
+        }
     </script>
 </body>
 </html>
