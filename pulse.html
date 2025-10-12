@@ -239,10 +239,10 @@
             isExpanding: true,
             minRadius: 15,
             maxRadius: 50,
-            pulseSpeed: 0.8,
+            pulseSpeed: 0.6,
             isLocked: false,
             walls: [],
-            wallSpeed: 3,
+            wallSpeed: 1.8,
             particles: [],
             screenShake: 0
         };
@@ -373,6 +373,10 @@
         function updateGame() {
             gameState.time += 0.016;
             
+            // Gradually increase speeds over time
+            gameState.wallSpeed += 0.002;
+            gameState.pulseSpeed += 0.0008;
+            
             // Pulse the circle size if not locked
             if (!gameState.isLocked) {
                 if (gameState.isExpanding) {
@@ -433,10 +437,10 @@
                     playSound(600, 0.2);
                     gameState.isLocked = false; // Unlock after passing
                     
-                    // Increase difficulty
+                    // Small bonus speed bump on score milestones
                     if (gameState.score % 50 === 0) {
-                        gameState.wallSpeed += 0.3;
-                        gameState.pulseSpeed += 0.1;
+                        gameState.wallSpeed += 0.2;
+                        gameState.pulseSpeed += 0.05;
                     }
                 }
                 
