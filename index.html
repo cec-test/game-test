@@ -158,17 +158,21 @@
         const startBtn = document.getElementById('startBtn');
 
         // Game constants
-        const WALL_WIDTH = 50;
-        const MAGNET_SIZE = 35;
-        const INITIAL_OBSTACLE_SPEED = 2;
-        const INITIAL_SPAWN_RATE = 100;
+        const WALL_WIDTH = 3;
+        const MAGNET_SIZE = 40;
+        const INITIAL_OBSTACLE_SPEED = 2.5;
+        const INITIAL_SPAWN_RATE = 90;
 
-        // Obstacle types
+        // Obstacle types - more creative and varied!
         const OBSTACLE_TYPES = [
-            { name: 'beaker', minWidth: 25, maxWidth: 45, minHeight: 40, maxHeight: 70 },
-            { name: 'flask', minWidth: 30, maxWidth: 50, minHeight: 45, maxHeight: 65 },
-            { name: 'tube', minWidth: 15, maxWidth: 25, minHeight: 50, maxHeight: 80 },
-            { name: 'bottle', minWidth: 20, maxWidth: 35, minHeight: 55, maxHeight: 75 }
+            { name: 'beaker', minWidth: 30, maxWidth: 50, minHeight: 45, maxHeight: 75 },
+            { name: 'flask', minWidth: 35, maxWidth: 55, minHeight: 50, maxHeight: 70 },
+            { name: 'screw', minWidth: 15, maxWidth: 20, minHeight: 60, maxHeight: 90 },
+            { name: 'bolt', minWidth: 20, maxWidth: 30, minHeight: 50, maxHeight: 80 },
+            { name: 'gear', minWidth: 40, maxWidth: 60, minHeight: 40, maxHeight: 60 },
+            { name: 'wrench', minWidth: 25, maxWidth: 35, minHeight: 70, maxHeight: 100 },
+            { name: 'nail', minWidth: 10, maxWidth: 15, minHeight: 60, maxHeight: 95 },
+            { name: 'spring', minWidth: 25, maxWidth: 40, minHeight: 50, maxHeight: 80 }
         ];
 
         // Game state
@@ -177,8 +181,8 @@
             score: 0,
             magnetSide: 'left',
             magnetY: canvas.height / 2,
-            magnetX: WALL_WIDTH / 2,
-            magnetRotation: 0, // Rotation angle in radians
+            magnetX: WALL_WIDTH + 20,
+            magnetRotation: 0,
             targetRotation: 0,
             isTransitioning: false,
             obstacles: [],
@@ -207,7 +211,7 @@
                 score: 0,
                 magnetSide: 'left',
                 magnetY: canvas.height / 2,
-                magnetX: WALL_WIDTH / 2,
+                magnetX: WALL_WIDTH + 20,
                 magnetRotation: 0,
                 targetRotation: 0,
                 isTransitioning: false,
@@ -226,15 +230,13 @@
         }
 
         function switchSides() {
-            // Can switch at any time!
             gameState.isTransitioning = true;
             gameState.magnetSide = gameState.magnetSide === 'left' ? 'right' : 'left';
             
-            // Update target rotation for spinning effect
             if (gameState.magnetSide === 'left') {
-                gameState.targetRotation = 0; // Prongs face left
+                gameState.targetRotation = 0;
             } else {
-                gameState.targetRotation = Math.PI; // Prongs face right (180 degrees)
+                gameState.targetRotation = Math.PI;
             }
         }
 
@@ -242,12 +244,10 @@
             const side = Math.random() < 0.5 ? 'left' : 'right';
             const type = OBSTACLE_TYPES[Math.floor(Math.random() * OBSTACLE_TYPES.length)];
             
-            // Random size within type's range
             const width = type.minWidth + Math.random() * (type.maxWidth - type.minWidth);
             const height = type.minHeight + Math.random() * (type.maxHeight - type.minHeight);
             
-            // Random extension from wall (how far it sticks out)
-            const extension = 30 + Math.random() * 80; // 30-110 pixels into the middle
+            const extension = 40 + Math.random() * 90;
             
             let x;
             if (side === 'left') {
@@ -267,61 +267,55 @@
         }
 
         function updateGame() {
-            // Update magnet position during transition
             if (gameState.isTransitioning) {
                 let targetX;
                 if (gameState.magnetSide === 'left') {
-                    targetX = WALL_WIDTH / 2;
+                    targetX = WALL_WIDTH + 20;
                 } else {
-                    targetX = canvas.width - WALL_WIDTH / 2;
+                    targetX = canvas.width - WALL_WIDTH - 20;
                 }
                 
                 const dx = targetX - gameState.magnetX;
                 if (Math.abs(dx) > 2) {
-                    gameState.magnetX += dx * 0.2; // Fast movement
+                    gameState.magnetX += dx * 0.25;
                 } else {
                     gameState.magnetX = targetX;
                     gameState.isTransitioning = false;
                 }
             }
             
-            // Smooth rotation animation
             const rotDiff = gameState.targetRotation - gameState.magnetRotation;
             if (Math.abs(rotDiff) > 0.1) {
-                gameState.magnetRotation += rotDiff * 0.15;
+                gameState.magnetRotation += rotDiff * 0.2;
             } else {
                 gameState.magnetRotation = gameState.targetRotation;
             }
             
-            // Spawn obstacles
             gameState.spawnCounter++;
             if (gameState.spawnCounter >= gameState.spawnRate) {
                 spawnObstacle();
                 gameState.spawnCounter = 0;
             }
             
-            // Update obstacles
             for (let i = gameState.obstacles.length - 1; i >= 0; i--) {
                 const obstacle = gameState.obstacles[i];
                 obstacle.y += gameState.obstacleSpeed;
                 
-                // Check collision with magnet
                 if (checkCollision(obstacle)) {
                     endGame();
                     return;
                 }
                 
-                // Remove obstacles that are off screen and award points
                 if (obstacle.y > canvas.height) {
                     gameState.obstacles.splice(i, 1);
                     gameState.score += 10;
                     scoreElement.textContent = gameState.score;
                     
-                    // Increase difficulty
-                    if (gameState.score % 100 === 0) {
-                        gameState.difficulty += 0.1;
-                        gameState.obstacleSpeed = INITIAL_OBSTACLE_SPEED + gameState.difficulty * 0.5;
-                        gameState.spawnRate = Math.max(40, INITIAL_SPAWN_RATE - gameState.difficulty * 5);
+                    // Faster progression!
+                    if (gameState.score % 50 === 0) {
+                        gameState.difficulty += 0.2;
+                        gameState.obstacleSpeed = INITIAL_OBSTACLE_SPEED + gameState.difficulty * 0.7;
+                        gameState.spawnRate = Math.max(30, INITIAL_SPAWN_RATE - gameState.difficulty * 8);
                     }
                 }
             }
@@ -348,39 +342,39 @@
         }
 
         function drawGame() {
-            // Clear canvas
             ctx.fillStyle = '#1a1a2e';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
-            // Draw walls with gradient
-            const wallGradient = ctx.createLinearGradient(0, 0, WALL_WIDTH, 0);
-            wallGradient.addColorStop(0, '#2d2d44');
-            wallGradient.addColorStop(1, '#3a3a55');
-            
-            ctx.fillStyle = wallGradient;
+            // Simple clean walls - just edges
+            ctx.fillStyle = '#ffffff';
             ctx.fillRect(0, 0, WALL_WIDTH, canvas.height);
             ctx.fillRect(canvas.width - WALL_WIDTH, 0, WALL_WIDTH, canvas.height);
             
-            // Draw obstacles
             gameState.obstacles.forEach(obstacle => {
                 drawObstacle(obstacle);
             });
             
-            // Draw magnet
             drawMagnet(gameState.magnetX, gameState.magnetY, gameState.magnetRotation);
         }
 
         function drawObstacle(obstacle) {
             ctx.save();
             
-            const x = obstacle.x - obstacle.width / 2;
-            const y = obstacle.y;
-            const w = obstacle.width;
-            const h = obstacle.height;
+            // Rotate obstacles to stick to the wall
+            ctx.translate(obstacle.x, obstacle.y + obstacle.height / 2);
+            if (obstacle.side === 'left') {
+                ctx.rotate(Math.PI / 2); // 90 degrees clockwise
+            } else {
+                ctx.rotate(-Math.PI / 2); // 90 degrees counter-clockwise
+            }
+            
+            const w = obstacle.height; // Swapped because rotated
+            const h = obstacle.width;
+            const x = -w / 2;
+            const y = -h / 2;
             
             switch(obstacle.type) {
                 case 'beaker':
-                    // Beaker shape
                     ctx.fillStyle = '#4ecdc4';
                     ctx.strokeStyle = '#3ba89f';
                     ctx.lineWidth = 2;
@@ -400,13 +394,11 @@
                     ctx.fill();
                     ctx.stroke();
                     
-                    // Liquid
                     ctx.fillStyle = 'rgba(255, 107, 107, 0.6)';
                     ctx.fillRect(x + w * 0.1, y + h * 0.5, w * 0.8, h * 0.4);
                     break;
                     
                 case 'flask':
-                    // Erlenmeyer flask
                     ctx.fillStyle = '#95e1d3';
                     ctx.strokeStyle = '#6fbfaf';
                     ctx.lineWidth = 2;
@@ -424,7 +416,6 @@
                     ctx.fill();
                     ctx.stroke();
                     
-                    // Liquid
                     ctx.fillStyle = 'rgba(255, 195, 0, 0.6)';
                     ctx.beginPath();
                     ctx.moveTo(x + w * 0.15, y + h * 0.7);
@@ -435,50 +426,153 @@
                     ctx.fill();
                     break;
                     
-                case 'tube':
-                    // Test tube
-                    ctx.fillStyle = '#a8e6cf';
-                    ctx.strokeStyle = '#7fbf9f';
+                case 'screw':
+                    ctx.fillStyle = '#c0c0c0';
+                    ctx.strokeStyle = '#808080';
                     ctx.lineWidth = 2;
                     
+                    // Screw head
                     ctx.beginPath();
-                    ctx.moveTo(x + w * 0.2, y);
-                    ctx.lineTo(x + w * 0.2, y + h * 0.85);
-                    ctx.quadraticCurveTo(x + w * 0.2, y + h, x + w * 0.5, y + h);
-                    ctx.quadraticCurveTo(x + w * 0.8, y + h, x + w * 0.8, y + h * 0.85);
-                    ctx.lineTo(x + w * 0.8, y);
+                    ctx.arc(x + w * 0.15, y + h / 2, w * 0.15, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.stroke();
+                    
+                    // Screw line
+                    ctx.strokeStyle = '#505050';
+                    ctx.lineWidth = 1.5;
+                    ctx.beginPath();
+                    ctx.moveTo(x + w * 0.05, y + h / 2);
+                    ctx.lineTo(x + w * 0.25, y + h / 2);
+                    ctx.stroke();
+                    
+                    // Threaded body
+                    ctx.fillStyle = '#a0a0a0';
+                    ctx.fillRect(x + w * 0.3, y + h * 0.4, w * 0.7, h * 0.2);
+                    
+                    // Threads
+                    ctx.strokeStyle = '#707070';
+                    ctx.lineWidth = 1;
+                    for (let i = 0; i < 5; i++) {
+                        ctx.beginPath();
+                        ctx.moveTo(x + w * (0.35 + i * 0.12), y + h * 0.4);
+                        ctx.lineTo(x + w * (0.35 + i * 0.12), y + h * 0.6);
+                        ctx.stroke();
+                    }
+                    break;
+                    
+                case 'bolt':
+                    ctx.fillStyle = '#b0b0b0';
+                    ctx.strokeStyle = '#707070';
+                    ctx.lineWidth = 2;
+                    
+                    // Hex head
+                    ctx.beginPath();
+                    for (let i = 0; i < 6; i++) {
+                        const angle = (Math.PI / 3) * i;
+                        const bx = x + w * 0.15 + Math.cos(angle) * w * 0.12;
+                        const by = y + h / 2 + Math.sin(angle) * w * 0.12;
+                        if (i === 0) ctx.moveTo(bx, by);
+                        else ctx.lineTo(bx, by);
+                    }
                     ctx.closePath();
                     ctx.fill();
                     ctx.stroke();
                     
-                    // Liquid
-                    ctx.fillStyle = 'rgba(147, 51, 234, 0.6)';
-                    ctx.fillRect(x + w * 0.25, y + h * 0.4, w * 0.5, h * 0.4);
+                    // Body
+                    ctx.fillStyle = '#909090';
+                    ctx.fillRect(x + w * 0.3, y + h * 0.35, w * 0.65, h * 0.3);
+                    ctx.strokeRect(x + w * 0.3, y + h * 0.35, w * 0.65, h * 0.3);
                     break;
                     
-                case 'bottle':
-                    // Laboratory bottle
-                    ctx.fillStyle = '#ffd89b';
-                    ctx.strokeStyle = '#e6b87d';
+                case 'gear':
+                    ctx.fillStyle = '#888888';
+                    ctx.strokeStyle = '#555555';
                     ctx.lineWidth = 2;
                     
-                    // Body
-                    ctx.fillRect(x + w * 0.15, y + h * 0.25, w * 0.7, h * 0.7);
-                    ctx.strokeRect(x + w * 0.15, y + h * 0.25, w * 0.7, h * 0.7);
+                    const teeth = 8;
+                    const innerRadius = Math.min(w, h) * 0.25;
+                    const outerRadius = Math.min(w, h) * 0.4;
                     
-                    // Neck
-                    ctx.fillRect(x + w * 0.35, y, w * 0.3, h * 0.3);
-                    ctx.strokeRect(x + w * 0.35, y, w * 0.3, h * 0.3);
-                    
-                    // Bottom curve
                     ctx.beginPath();
-                    ctx.arc(x + w * 0.5, y + h * 0.95, w * 0.35, 0, Math.PI);
+                    for (let i = 0; i < teeth * 2; i++) {
+                        const angle = (Math.PI * i) / teeth;
+                        const radius = i % 2 === 0 ? outerRadius : innerRadius;
+                        const gx = x + w / 2 + Math.cos(angle) * radius;
+                        const gy = y + h / 2 + Math.sin(angle) * radius;
+                        if (i === 0) ctx.moveTo(gx, gy);
+                        else ctx.lineTo(gx, gy);
+                    }
+                    ctx.closePath();
                     ctx.fill();
                     ctx.stroke();
                     
-                    // Liquid
-                    ctx.fillStyle = 'rgba(52, 211, 153, 0.6)';
-                    ctx.fillRect(x + w * 0.2, y + h * 0.6, w * 0.6, h * 0.3);
+                    // Center hole
+                    ctx.fillStyle = '#1a1a2e';
+                    ctx.beginPath();
+                    ctx.arc(x + w / 2, y + h / 2, innerRadius * 0.4, 0, Math.PI * 2);
+                    ctx.fill();
+                    break;
+                    
+                case 'wrench':
+                    ctx.fillStyle = '#a8a8a8';
+                    ctx.strokeStyle = '#606060';
+                    ctx.lineWidth = 2;
+                    
+                    // Handle
+                    ctx.fillRect(x + w * 0.3, y + h * 0.4, w * 0.6, h * 0.2);
+                    ctx.strokeRect(x + w * 0.3, y + h * 0.4, w * 0.6, h * 0.2);
+                    
+                    // Open end
+                    ctx.beginPath();
+                    ctx.moveTo(x, y + h * 0.3);
+                    ctx.lineTo(x + w * 0.25, y + h * 0.4);
+                    ctx.lineTo(x + w * 0.25, y + h * 0.6);
+                    ctx.lineTo(x, y + h * 0.7);
+                    ctx.lineTo(x + w * 0.1, y + h / 2);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.stroke();
+                    break;
+                    
+                case 'nail':
+                    ctx.fillStyle = '#c8c8c8';
+                    ctx.strokeStyle = '#787878';
+                    ctx.lineWidth = 2;
+                    
+                    // Nail head
+                    ctx.beginPath();
+                    ctx.arc(x + w * 0.1, y + h / 2, w * 0.1, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.stroke();
+                    
+                    // Nail body
+                    ctx.fillStyle = '#b8b8b8';
+                    ctx.fillRect(x + w * 0.2, y + h * 0.45, w * 0.75, h * 0.1);
+                    ctx.strokeRect(x + w * 0.2, y + h * 0.45, w * 0.75, h * 0.1);
+                    
+                    // Point
+                    ctx.beginPath();
+                    ctx.moveTo(x + w * 0.95, y + h * 0.45);
+                    ctx.lineTo(x + w, y + h / 2);
+                    ctx.lineTo(x + w * 0.95, y + h * 0.55);
+                    ctx.fill();
+                    break;
+                    
+                case 'spring':
+                    ctx.strokeStyle = '#909090';
+                    ctx.lineWidth = 3;
+                    ctx.lineCap = 'round';
+                    
+                    ctx.beginPath();
+                    const coils = 7;
+                    for (let i = 0; i <= coils * 4; i++) {
+                        const progress = i / (coils * 4);
+                        const sx = x + w * progress;
+                        const sy = y + h / 2 + Math.sin(i * Math.PI / 2) * h * 0.35;
+                        if (i === 0) ctx.moveTo(sx, sy);
+                        else ctx.lineTo(sx, sy);
+                    }
+                    ctx.stroke();
                     break;
             }
             
@@ -491,44 +585,52 @@
             ctx.rotate(rotation);
             
             const size = MAGNET_SIZE;
+            const thickness = size * 0.3;
             
-            // Draw horseshoe magnet with prongs pointing left (will rotate)
-            ctx.strokeStyle = '#505050';
-            ctx.lineWidth = 3;
+            // Draw a proper horseshoe magnet
+            ctx.lineWidth = thickness;
+            ctx.lineCap = 'round';
             
-            // Red pole (North) - top prong
-            ctx.fillStyle = '#ff3333';
+            // Draw the U-shape curve
+            ctx.strokeStyle = '#d0d0d0'; // Silver/gray body
             ctx.beginPath();
-            ctx.rect(-size/2, -size/2.5, size/4, size * 0.7);
-            ctx.fill();
+            ctx.arc(-size * 0.1, 0, size * 0.45, Math.PI * 0.7, Math.PI * 1.3);
             ctx.stroke();
+            
+            // North pole (red) - top arm
+            ctx.strokeStyle = '#ff3333';
+            ctx.lineWidth = thickness;
+            ctx.beginPath();
+            ctx.moveTo(-size * 0.5, -size * 0.2);
+            ctx.lineTo(-size * 0.5, -size * 0.55);
+            ctx.stroke();
+            
+            // North pole cap
+            ctx.fillStyle = '#ff3333';
+            ctx.fillRect(-size * 0.5 - thickness / 2, -size * 0.65, thickness, thickness * 0.7);
             
             // Label N
             ctx.fillStyle = '#ffffff';
-            ctx.font = 'bold 12px Arial';
+            ctx.font = 'bold 14px Arial';
             ctx.textAlign = 'center';
-            ctx.fillText('N', -size/2 + size/8, -size/8);
+            ctx.textBaseline = 'middle';
+            ctx.fillText('N', -size * 0.5, -size * 0.4);
             
-            // Blue pole (South) - bottom prong
-            ctx.fillStyle = '#3333ff';
+            // South pole (blue) - bottom arm
+            ctx.strokeStyle = '#3333ff';
+            ctx.lineWidth = thickness;
             ctx.beginPath();
-            ctx.rect(-size/2, -size/2.5 + size * 0.3, size/4, size * 0.7);
-            ctx.fill();
+            ctx.moveTo(-size * 0.5, size * 0.2);
+            ctx.lineTo(-size * 0.5, size * 0.55);
             ctx.stroke();
+            
+            // South pole cap
+            ctx.fillStyle = '#3333ff';
+            ctx.fillRect(-size * 0.5 - thickness / 2, size * 0.65 - thickness * 0.7, thickness, thickness * 0.7);
             
             // Label S
             ctx.fillStyle = '#ffffff';
-            ctx.fillText('S', -size/2 + size/8, size/3);
-            
-            // Connecting curve (the back of the horseshoe)
-            ctx.fillStyle = '#c0c0c0';
-            ctx.strokeStyle = '#808080';
-            ctx.lineWidth = 2;
-            
-            ctx.beginPath();
-            ctx.arc(0, 0, size/2.5, -Math.PI/2 - 0.8, -Math.PI/2 + 0.8);
-            ctx.lineWidth = size/5;
-            ctx.stroke();
+            ctx.fillText('S', -size * 0.5, size * 0.4);
             
             ctx.restore();
         }
@@ -548,7 +650,6 @@
             requestAnimationFrame(gameLoop);
         }
 
-        // Draw initial state
         drawGame();
     </script>
 </body>
