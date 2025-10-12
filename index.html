@@ -877,8 +877,8 @@
                 magnetSide: 'left',
                 magnetY: canvas.height / 2,
                 magnetX: WALL_WIDTH + 20,
-                magnetRotation: Math.PI,
-                targetRotation: Math.PI,
+                magnetRotation: 0,
+                targetRotation: 0,
                 isTransitioning: false,
                 obstacles: [],
                 obstacleSpeed: INITIAL_OBSTACLE_SPEED,
@@ -907,8 +907,8 @@
         function switchSides() {
             gameState.isTransitioning = true;
             gameState.magnetSide = gameState.magnetSide === 'left' ? 'right' : 'left';
-            // Flip rotation: prongs point INTO playfield, back touches wall
-            gameState.targetRotation = gameState.magnetSide === 'left' ? Math.PI : 0;
+            // Prongs stick to wall, back (U curve) points into playfield
+            gameState.targetRotation = gameState.magnetSide === 'left' ? 0 : Math.PI;
         }
 
         function createSwitchParticles() {
