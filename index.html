@@ -417,8 +417,11 @@
                     <p>HIGH SCORE: <span id="displayHighScore" style="color: #ffff00;">0</span></p>
                 </div>
                 <div id="newAchievements"></div>
-                <p class="restart-hint">▶ PRESS SPACE TO RESTART ◀</p>
-                <button class="button-secondary" onclick="showMenu()">MENU</button>
+                <div style="margin: 20px 0;">
+                    <button id="playAgainBtn" onclick="startGame()">🔄 PLAY AGAIN 🔄</button>
+                    <button class="button-secondary" onclick="showMenu()">MENU</button>
+                </div>
+                <p class="restart-hint" style="font-size: 0.9em; margin-top: 10px;">or press SPACE</p>
             </div>
             
             <!-- Start Screen -->
