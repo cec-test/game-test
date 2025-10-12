@@ -357,13 +357,14 @@
         }
 
         function spawnWall() {
-            const gapSize = 80 + Math.random() * 40; // Random gap size
-            const gapPosition = 150 + Math.random() * 100; // Random gap position
+            const gapSize = 60 + Math.random() * 60; // Random gap size (60-120px)
+            const gapCenterY = canvas.height / 2; // Center gap on circle's position
+            const gapY = gapCenterY - (gapSize / 2); // Top of gap
             
             gameState.walls.push({
                 x: canvas.width + 50,
                 y: 0,
-                gapY: gapPosition,
+                gapY: gapY,
                 gapSize: gapSize,
                 passed: false
             });
