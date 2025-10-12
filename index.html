@@ -31,20 +31,24 @@
             margin-bottom: 20px;
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
             letter-spacing: 8px;
+            background: linear-gradient(45deg, #fff, #4ecdc4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
         .game-wrapper {
             position: relative;
             display: inline-block;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-            border-radius: 10px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            border-radius: 15px;
             overflow: hidden;
         }
 
         #gameCanvas {
             display: block;
-            background: #1a1a2e;
-            border: 4px solid #fff;
+            background: radial-gradient(circle at 50% 50%, #252545, #0f0f1e);
+            border: 5px solid #fff;
         }
 
         .info {
@@ -53,9 +57,10 @@
         }
 
         .score {
-            font-size: 1.5em;
+            font-size: 1.8em;
             font-weight: bold;
             margin-bottom: 10px;
+            text-shadow: 0 0 10px rgba(78, 205, 196, 0.5);
         }
 
         .instructions {
@@ -69,12 +74,13 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.9);
+            background: rgba(0, 0, 0, 0.95);
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             z-index: 10;
+            backdrop-filter: blur(10px);
         }
 
         .hidden {
@@ -85,10 +91,12 @@
             font-size: 2.5em;
             margin-bottom: 20px;
             color: #ff6b6b;
+            text-shadow: 0 0 20px rgba(255, 107, 107, 0.5);
         }
 
         .start-screen h2 {
             color: #4ecdc4;
+            text-shadow: 0 0 20px rgba(78, 205, 196, 0.5);
         }
 
         .game-over p, .start-screen p {
@@ -112,7 +120,7 @@
 
         button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
         }
 
         button:active {
@@ -122,6 +130,7 @@
         #finalScore {
             color: #4ecdc4;
             font-size: 1.5em;
+            text-shadow: 0 0 10px rgba(78, 205, 196, 0.5);
         }
     </style>
 </head>
@@ -159,11 +168,11 @@
 
         // Game constants
         const WALL_WIDTH = 3;
-        const MAGNET_SIZE = 40;
+        const MAGNET_SIZE = 42;
         const INITIAL_OBSTACLE_SPEED = 2.5;
         const INITIAL_SPAWN_RATE = 90;
 
-        // Obstacle types - more creative and varied!
+        // Obstacle types
         const OBSTACLE_TYPES = [
             { name: 'beaker', minWidth: 30, maxWidth: 50, minHeight: 45, maxHeight: 75 },
             { name: 'flask', minWidth: 35, maxWidth: 55, minHeight: 50, maxHeight: 70 },
@@ -189,7 +198,8 @@
             obstacleSpeed: INITIAL_OBSTACLE_SPEED,
             spawnCounter: 0,
             spawnRate: INITIAL_SPAWN_RATE,
-            difficulty: 1
+            difficulty: 1,
+            particles: []
         };
 
         // Event listeners
@@ -198,6 +208,7 @@
                 e.preventDefault();
                 if (gameState.isPlaying) {
                     switchSides();
+                    createSwitchParticles();
                 }
             }
         });
@@ -219,7 +230,8 @@
                 obstacleSpeed: INITIAL_OBSTACLE_SPEED,
                 spawnCounter: 0,
                 spawnRate: INITIAL_SPAWN_RATE,
-                difficulty: 1
+                difficulty: 1,
+                particles: []
             };
             
             startScreen.classList.add('hidden');
@@ -238,6 +250,47 @@
             } else {
                 gameState.targetRotation = Math.PI;
             }
+        }
+
+        function createSwitchParticles() {
+            for (let i = 0; i < 8; i++) {
+                gameState.particles.push({
+                    x: gameState.magnetX,
+                    y: gameState.magnetY,
+                    vx: (Math.random() - 0.5) * 6,
+                    vy: (Math.random() - 0.5) * 6,
+                    life: 1,
+                    color: gameState.magnetSide === 'left' ? '#4ecdc4' : '#ff6b6b'
+                });
+            }
+        }
+
+        function updateParticles() {
+            for (let i = gameState.particles.length - 1; i >= 0; i--) {
+                const p = gameState.particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.life -= 0.02;
+                p.vy += 0.1; // gravity
+                
+                if (p.life <= 0) {
+                    gameState.particles.splice(i, 1);
+                }
+            }
+        }
+
+        function drawParticles() {
+            gameState.particles.forEach(p => {
+                ctx.save();
+                ctx.globalAlpha = p.life;
+                ctx.fillStyle = p.color;
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            });
         }
 
         function spawnObstacle() {
@@ -291,6 +344,8 @@
                 gameState.magnetRotation = gameState.targetRotation;
             }
             
+            updateParticles();
+            
             gameState.spawnCounter++;
             if (gameState.spawnCounter >= gameState.spawnRate) {
                 spawnObstacle();
@@ -311,7 +366,6 @@
                     gameState.score += 10;
                     scoreElement.textContent = gameState.score;
                     
-                    // Faster progression!
                     if (gameState.score % 50 === 0) {
                         gameState.difficulty += 0.2;
                         gameState.obstacleSpeed = INITIAL_OBSTACLE_SPEED + gameState.difficulty * 0.7;
@@ -342,13 +396,23 @@
         }
 
         function drawGame() {
-            ctx.fillStyle = '#1a1a2e';
+            // Background with gradient
+            const bgGradient = ctx.createRadialGradient(canvas.width/2, canvas.height/2, 0, 
+                                                        canvas.width/2, canvas.height/2, canvas.width);
+            bgGradient.addColorStop(0, '#252545');
+            bgGradient.addColorStop(1, '#0f0f1e');
+            ctx.fillStyle = bgGradient;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
-            // Simple clean walls - just edges
-            ctx.fillStyle = '#ffffff';
+            // Glowing walls
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = '#4ecdc4';
+            ctx.fillStyle = '#4ecdc4';
             ctx.fillRect(0, 0, WALL_WIDTH, canvas.height);
             ctx.fillRect(canvas.width - WALL_WIDTH, 0, WALL_WIDTH, canvas.height);
+            ctx.shadowBlur = 0;
+            
+            drawParticles();
             
             gameState.obstacles.forEach(obstacle => {
                 drawObstacle(obstacle);
@@ -360,24 +424,32 @@
         function drawObstacle(obstacle) {
             ctx.save();
             
-            // Rotate obstacles to stick to the wall
             ctx.translate(obstacle.x, obstacle.y + obstacle.height / 2);
             if (obstacle.side === 'left') {
-                ctx.rotate(Math.PI / 2); // 90 degrees clockwise
+                ctx.rotate(Math.PI / 2);
             } else {
-                ctx.rotate(-Math.PI / 2); // 90 degrees counter-clockwise
+                ctx.rotate(-Math.PI / 2);
             }
             
-            const w = obstacle.height; // Swapped because rotated
+            const w = obstacle.height;
             const h = obstacle.width;
             const x = -w / 2;
             const y = -h / 2;
             
+            // Add shadow to all obstacles
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+            ctx.shadowOffsetX = 3;
+            ctx.shadowOffsetY = 3;
+            
             switch(obstacle.type) {
                 case 'beaker':
-                    ctx.fillStyle = '#4ecdc4';
-                    ctx.strokeStyle = '#3ba89f';
-                    ctx.lineWidth = 2;
+                    const beakerGrad = ctx.createLinearGradient(x, y, x + w, y + h);
+                    beakerGrad.addColorStop(0, '#5eddd6');
+                    beakerGrad.addColorStop(1, '#3ba89f');
+                    ctx.fillStyle = beakerGrad;
+                    ctx.strokeStyle = '#2a7f77';
+                    ctx.lineWidth = 2.5;
                     
                     ctx.beginPath();
                     ctx.moveTo(x + w * 0.2, y);
@@ -394,14 +466,25 @@
                     ctx.fill();
                     ctx.stroke();
                     
-                    ctx.fillStyle = 'rgba(255, 107, 107, 0.6)';
+                    // Liquid with gradient
+                    const liquidGrad = ctx.createLinearGradient(x, y + h * 0.5, x, y + h * 0.9);
+                    liquidGrad.addColorStop(0, 'rgba(255, 107, 107, 0.8)');
+                    liquidGrad.addColorStop(1, 'rgba(255, 50, 50, 0.6)');
+                    ctx.fillStyle = liquidGrad;
                     ctx.fillRect(x + w * 0.1, y + h * 0.5, w * 0.8, h * 0.4);
+                    
+                    // Shine
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+                    ctx.fillRect(x + w * 0.15, y + h * 0.35, w * 0.1, h * 0.3);
                     break;
                     
                 case 'flask':
-                    ctx.fillStyle = '#95e1d3';
-                    ctx.strokeStyle = '#6fbfaf';
-                    ctx.lineWidth = 2;
+                    const flaskGrad = ctx.createLinearGradient(x, y, x + w, y + h);
+                    flaskGrad.addColorStop(0, '#a5f3e6');
+                    flaskGrad.addColorStop(1, '#6fbfaf');
+                    ctx.fillStyle = flaskGrad;
+                    ctx.strokeStyle = '#4a9580';
+                    ctx.lineWidth = 2.5;
                     
                     ctx.beginPath();
                     ctx.moveTo(x + w * 0.35, y);
@@ -416,7 +499,11 @@
                     ctx.fill();
                     ctx.stroke();
                     
-                    ctx.fillStyle = 'rgba(255, 195, 0, 0.6)';
+                    // Liquid
+                    const flaskLiquidGrad = ctx.createLinearGradient(x, y + h * 0.7, x, y + h * 0.95);
+                    flaskLiquidGrad.addColorStop(0, 'rgba(255, 195, 0, 0.8)');
+                    flaskLiquidGrad.addColorStop(1, 'rgba(255, 165, 0, 0.6)');
+                    ctx.fillStyle = flaskLiquidGrad;
                     ctx.beginPath();
                     ctx.moveTo(x + w * 0.15, y + h * 0.7);
                     ctx.lineTo(x + w * 0.1, y + h * 0.95);
@@ -424,53 +511,71 @@
                     ctx.lineTo(x + w * 0.85, y + h * 0.7);
                     ctx.closePath();
                     ctx.fill();
+                    
+                    // Shine
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+                    ctx.fillRect(x + w * 0.55, y + h * 0.15, w * 0.08, h * 0.25);
                     break;
                     
                 case 'screw':
-                    ctx.fillStyle = '#c0c0c0';
-                    ctx.strokeStyle = '#808080';
+                    const screwGrad = ctx.createRadialGradient(x + w * 0.15, y + h / 2, 0,
+                                                               x + w * 0.15, y + h / 2, w * 0.2);
+                    screwGrad.addColorStop(0, '#e0e0e0');
+                    screwGrad.addColorStop(1, '#a0a0a0');
+                    ctx.fillStyle = screwGrad;
+                    ctx.strokeStyle = '#707070';
                     ctx.lineWidth = 2;
                     
-                    // Screw head
+                    // Head
                     ctx.beginPath();
                     ctx.arc(x + w * 0.15, y + h / 2, w * 0.15, 0, Math.PI * 2);
                     ctx.fill();
                     ctx.stroke();
                     
-                    // Screw line
+                    // Cross
                     ctx.strokeStyle = '#505050';
-                    ctx.lineWidth = 1.5;
+                    ctx.lineWidth = 2;
                     ctx.beginPath();
                     ctx.moveTo(x + w * 0.05, y + h / 2);
                     ctx.lineTo(x + w * 0.25, y + h / 2);
+                    ctx.moveTo(x + w * 0.15, y + h * 0.4);
+                    ctx.lineTo(x + w * 0.15, y + h * 0.6);
                     ctx.stroke();
                     
-                    // Threaded body
-                    ctx.fillStyle = '#a0a0a0';
+                    // Body with metallic gradient
+                    const bodyGrad = ctx.createLinearGradient(x + w * 0.3, y, x + w, y);
+                    bodyGrad.addColorStop(0, '#b0b0b0');
+                    bodyGrad.addColorStop(0.5, '#d0d0d0');
+                    bodyGrad.addColorStop(1, '#909090');
+                    ctx.fillStyle = bodyGrad;
                     ctx.fillRect(x + w * 0.3, y + h * 0.4, w * 0.7, h * 0.2);
                     
                     // Threads
-                    ctx.strokeStyle = '#707070';
-                    ctx.lineWidth = 1;
-                    for (let i = 0; i < 5; i++) {
+                    ctx.strokeStyle = '#606060';
+                    ctx.lineWidth = 1.5;
+                    for (let i = 0; i < 6; i++) {
                         ctx.beginPath();
-                        ctx.moveTo(x + w * (0.35 + i * 0.12), y + h * 0.4);
-                        ctx.lineTo(x + w * (0.35 + i * 0.12), y + h * 0.6);
+                        ctx.moveTo(x + w * (0.35 + i * 0.1), y + h * 0.4);
+                        ctx.lineTo(x + w * (0.35 + i * 0.1), y + h * 0.6);
                         ctx.stroke();
                     }
                     break;
                     
                 case 'bolt':
-                    ctx.fillStyle = '#b0b0b0';
+                    const boltGrad = ctx.createLinearGradient(x, y + h * 0.3, x, y + h * 0.7);
+                    boltGrad.addColorStop(0, '#c8c8c8');
+                    boltGrad.addColorStop(0.5, '#e0e0e0');
+                    boltGrad.addColorStop(1, '#a8a8a8');
+                    ctx.fillStyle = boltGrad;
                     ctx.strokeStyle = '#707070';
-                    ctx.lineWidth = 2;
+                    ctx.lineWidth = 2.5;
                     
                     // Hex head
                     ctx.beginPath();
                     for (let i = 0; i < 6; i++) {
                         const angle = (Math.PI / 3) * i;
-                        const bx = x + w * 0.15 + Math.cos(angle) * w * 0.12;
-                        const by = y + h / 2 + Math.sin(angle) * w * 0.12;
+                        const bx = x + w * 0.15 + Math.cos(angle) * w * 0.14;
+                        const by = y + h / 2 + Math.sin(angle) * w * 0.14;
                         if (i === 0) ctx.moveTo(bx, by);
                         else ctx.lineTo(bx, by);
                     }
@@ -479,19 +584,28 @@
                     ctx.stroke();
                     
                     // Body
-                    ctx.fillStyle = '#909090';
+                    ctx.fillStyle = '#a0a0a0';
                     ctx.fillRect(x + w * 0.3, y + h * 0.35, w * 0.65, h * 0.3);
                     ctx.strokeRect(x + w * 0.3, y + h * 0.35, w * 0.65, h * 0.3);
+                    
+                    // Highlight
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+                    ctx.fillRect(x + w * 0.32, y + h * 0.37, w * 0.15, h * 0.06);
                     break;
                     
                 case 'gear':
-                    ctx.fillStyle = '#888888';
-                    ctx.strokeStyle = '#555555';
+                    const gearGrad = ctx.createRadialGradient(x + w/2, y + h/2, 0,
+                                                              x + w/2, y + h/2, Math.min(w, h) * 0.4);
+                    gearGrad.addColorStop(0, '#a0a0a0');
+                    gearGrad.addColorStop(0.5, '#888888');
+                    gearGrad.addColorStop(1, '#606060');
+                    ctx.fillStyle = gearGrad;
+                    ctx.strokeStyle = '#404040';
                     ctx.lineWidth = 2;
                     
-                    const teeth = 8;
-                    const innerRadius = Math.min(w, h) * 0.25;
-                    const outerRadius = Math.min(w, h) * 0.4;
+                    const teeth = 10;
+                    const innerRadius = Math.min(w, h) * 0.28;
+                    const outerRadius = Math.min(w, h) * 0.42;
                     
                     ctx.beginPath();
                     for (let i = 0; i < teeth * 2; i++) {
@@ -507,16 +621,33 @@
                     ctx.stroke();
                     
                     // Center hole
-                    ctx.fillStyle = '#1a1a2e';
+                    ctx.fillStyle = '#0f0f1e';
+                    ctx.strokeStyle = '#303030';
                     ctx.beginPath();
-                    ctx.arc(x + w / 2, y + h / 2, innerRadius * 0.4, 0, Math.PI * 2);
+                    ctx.arc(x + w / 2, y + h / 2, innerRadius * 0.5, 0, Math.PI * 2);
                     ctx.fill();
+                    ctx.stroke();
+                    
+                    // Bolts on gear
+                    for (let i = 0; i < 4; i++) {
+                        const angle = (Math.PI / 2) * i + Math.PI / 4;
+                        const bx = x + w / 2 + Math.cos(angle) * innerRadius * 0.8;
+                        const by = y + h / 2 + Math.sin(angle) * innerRadius * 0.8;
+                        ctx.fillStyle = '#505050';
+                        ctx.beginPath();
+                        ctx.arc(bx, by, innerRadius * 0.15, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
                     break;
                     
                 case 'wrench':
-                    ctx.fillStyle = '#a8a8a8';
+                    const wrenchGrad = ctx.createLinearGradient(x, y, x + w, y);
+                    wrenchGrad.addColorStop(0, '#c0c0c0');
+                    wrenchGrad.addColorStop(0.5, '#d8d8d8');
+                    wrenchGrad.addColorStop(1, '#a0a0a0');
+                    ctx.fillStyle = wrenchGrad;
                     ctx.strokeStyle = '#606060';
-                    ctx.lineWidth = 2;
+                    ctx.lineWidth = 2.5;
                     
                     // Handle
                     ctx.fillRect(x + w * 0.3, y + h * 0.4, w * 0.6, h * 0.2);
@@ -532,21 +663,33 @@
                     ctx.closePath();
                     ctx.fill();
                     ctx.stroke();
+                    
+                    // Highlight
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+                    ctx.fillRect(x + w * 0.35, y + h * 0.42, w * 0.3, h * 0.05);
                     break;
                     
                 case 'nail':
-                    ctx.fillStyle = '#c8c8c8';
+                    const nailGrad = ctx.createLinearGradient(x, y, x + w, y);
+                    nailGrad.addColorStop(0, '#d8d8d8');
+                    nailGrad.addColorStop(0.5, '#f0f0f0');
+                    nailGrad.addColorStop(1, '#b8b8b8');
+                    
+                    // Head
+                    const headGrad = ctx.createRadialGradient(x + w * 0.1, y + h / 2, 0,
+                                                              x + w * 0.1, y + h / 2, w * 0.12);
+                    headGrad.addColorStop(0, '#e8e8e8');
+                    headGrad.addColorStop(1, '#a8a8a8');
+                    ctx.fillStyle = headGrad;
                     ctx.strokeStyle = '#787878';
                     ctx.lineWidth = 2;
-                    
-                    // Nail head
                     ctx.beginPath();
-                    ctx.arc(x + w * 0.1, y + h / 2, w * 0.1, 0, Math.PI * 2);
+                    ctx.arc(x + w * 0.1, y + h / 2, w * 0.11, 0, Math.PI * 2);
                     ctx.fill();
                     ctx.stroke();
                     
-                    // Nail body
-                    ctx.fillStyle = '#b8b8b8';
+                    // Body
+                    ctx.fillStyle = nailGrad;
                     ctx.fillRect(x + w * 0.2, y + h * 0.45, w * 0.75, h * 0.1);
                     ctx.strokeRect(x + w * 0.2, y + h * 0.45, w * 0.75, h * 0.1);
                     
@@ -556,19 +699,38 @@
                     ctx.lineTo(x + w, y + h / 2);
                     ctx.lineTo(x + w * 0.95, y + h * 0.55);
                     ctx.fill();
+                    
+                    // Shine on body
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+                    ctx.fillRect(x + w * 0.25, y + h * 0.46, w * 0.5, h * 0.03);
                     break;
                     
                 case 'spring':
-                    ctx.strokeStyle = '#909090';
-                    ctx.lineWidth = 3;
+                    ctx.strokeStyle = '#b0b0b0';
+                    ctx.lineWidth = 4;
                     ctx.lineCap = 'round';
+                    ctx.shadowBlur = 5;
+                    ctx.shadowColor = '#606060';
                     
                     ctx.beginPath();
-                    const coils = 7;
+                    const coils = 8;
                     for (let i = 0; i <= coils * 4; i++) {
                         const progress = i / (coils * 4);
                         const sx = x + w * progress;
-                        const sy = y + h / 2 + Math.sin(i * Math.PI / 2) * h * 0.35;
+                        const sy = y + h / 2 + Math.sin(i * Math.PI / 2) * h * 0.38;
+                        if (i === 0) ctx.moveTo(sx, sy);
+                        else ctx.lineTo(sx, sy);
+                    }
+                    ctx.stroke();
+                    
+                    // Highlight on spring
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+                    ctx.lineWidth = 1.5;
+                    ctx.beginPath();
+                    for (let i = 0; i <= coils * 4; i++) {
+                        const progress = i / (coils * 4);
+                        const sx = x + w * progress;
+                        const sy = y + h / 2 + Math.sin(i * Math.PI / 2) * h * 0.32;
                         if (i === 0) ctx.moveTo(sx, sy);
                         else ctx.lineTo(sx, sy);
                     }
@@ -585,52 +747,79 @@
             ctx.rotate(rotation);
             
             const size = MAGNET_SIZE;
-            const thickness = size * 0.3;
+            const thickness = size * 0.32;
             
-            // Draw a proper horseshoe magnet
+            // Glow effect
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = gameState.magnetSide === 'left' ? '#ff3333' : '#3333ff';
+            
+            // Metal body with gradient
+            const bodyGrad = ctx.createLinearGradient(-size * 0.6, -size * 0.6, -size * 0.6, size * 0.6);
+            bodyGrad.addColorStop(0, '#e8e8e8');
+            bodyGrad.addColorStop(0.5, '#d0d0d0');
+            bodyGrad.addColorStop(1, '#b0b0b0');
+            
+            // Draw curved back
+            ctx.strokeStyle = bodyGrad;
             ctx.lineWidth = thickness;
             ctx.lineCap = 'round';
-            
-            // Draw the U-shape curve
-            ctx.strokeStyle = '#d0d0d0'; // Silver/gray body
             ctx.beginPath();
-            ctx.arc(-size * 0.1, 0, size * 0.45, Math.PI * 0.7, Math.PI * 1.3);
+            ctx.arc(-size * 0.08, 0, size * 0.48, Math.PI * 0.65, Math.PI * 1.35);
             ctx.stroke();
             
-            // North pole (red) - top arm
-            ctx.strokeStyle = '#ff3333';
+            // North pole (red) with gradient
+            const northGrad = ctx.createLinearGradient(-size * 0.5, -size * 0.65, -size * 0.5, -size * 0.15);
+            northGrad.addColorStop(0, '#ff5555');
+            northGrad.addColorStop(0.5, '#ff3333');
+            northGrad.addColorStop(1, '#dd1111');
+            
+            ctx.strokeStyle = northGrad;
             ctx.lineWidth = thickness;
+            ctx.shadowBlur = 25;
+            ctx.shadowColor = '#ff3333';
             ctx.beginPath();
-            ctx.moveTo(-size * 0.5, -size * 0.2);
-            ctx.lineTo(-size * 0.5, -size * 0.55);
+            ctx.moveTo(-size * 0.5, -size * 0.18);
+            ctx.lineTo(-size * 0.5, -size * 0.58);
             ctx.stroke();
             
-            // North pole cap
-            ctx.fillStyle = '#ff3333';
-            ctx.fillRect(-size * 0.5 - thickness / 2, -size * 0.65, thickness, thickness * 0.7);
+            // North cap
+            ctx.fillStyle = northGrad;
+            ctx.shadowBlur = 20;
+            ctx.fillRect(-size * 0.5 - thickness / 2, -size * 0.68, thickness, thickness * 0.8);
             
-            // Label N
+            // Label N with glow
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = '#ffffff';
             ctx.fillStyle = '#ffffff';
-            ctx.font = 'bold 14px Arial';
+            ctx.font = 'bold 16px Arial';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText('N', -size * 0.5, -size * 0.4);
+            ctx.fillText('N', -size * 0.5, -size * 0.38);
             
-            // South pole (blue) - bottom arm
-            ctx.strokeStyle = '#3333ff';
+            // South pole (blue) with gradient
+            const southGrad = ctx.createLinearGradient(-size * 0.5, size * 0.15, -size * 0.5, size * 0.65);
+            southGrad.addColorStop(0, '#5555ff');
+            southGrad.addColorStop(0.5, '#3333ff');
+            southGrad.addColorStop(1, '#1111dd');
+            
+            ctx.strokeStyle = southGrad;
             ctx.lineWidth = thickness;
+            ctx.shadowBlur = 25;
+            ctx.shadowColor = '#3333ff';
             ctx.beginPath();
-            ctx.moveTo(-size * 0.5, size * 0.2);
-            ctx.lineTo(-size * 0.5, size * 0.55);
+            ctx.moveTo(-size * 0.5, size * 0.18);
+            ctx.lineTo(-size * 0.5, size * 0.58);
             ctx.stroke();
             
-            // South pole cap
-            ctx.fillStyle = '#3333ff';
-            ctx.fillRect(-size * 0.5 - thickness / 2, size * 0.65 - thickness * 0.7, thickness, thickness * 0.7);
+            // South cap
+            ctx.fillStyle = southGrad;
+            ctx.shadowBlur = 20;
+            ctx.fillRect(-size * 0.5 - thickness / 2, size * 0.68 - thickness * 0.8, thickness, thickness * 0.8);
             
-            // Label S
+            // Label S with glow
+            ctx.shadowBlur = 10;
             ctx.fillStyle = '#ffffff';
-            ctx.fillText('S', -size * 0.5, size * 0.4);
+            ctx.fillText('S', -size * 0.5, size * 0.38);
             
             ctx.restore();
         }
