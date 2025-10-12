@@ -3,8 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Polarity - Magnet Game</title>
+    <title>POLARITY</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@900&display=swap');
+        
         * {
             margin: 0;
             padding: 0;
@@ -12,60 +14,118 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Orbitron', sans-serif;
+            background: #000;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            color: #fff;
+            overflow: hidden;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 50% 50%, #ff00ff22, transparent 70%);
+            pointer-events: none;
+            animation: pulse 4s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
         }
 
         .container {
             text-align: center;
             padding: 20px;
+            position: relative;
+            z-index: 1;
         }
 
         h1 {
-            font-size: 3em;
-            margin-bottom: 20px;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-            letter-spacing: 8px;
-            background: linear-gradient(45deg, #fff, #4ecdc4);
+            font-size: 4em;
+            margin-bottom: 15px;
+            letter-spacing: 20px;
+            background: linear-gradient(90deg, #ff00ff, #00ffff, #ff00ff);
+            background-size: 200% 200%;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+            animation: gradientShift 3s ease infinite;
+            filter: drop-shadow(0 0 30px #ff00ff) drop-shadow(0 0 60px #00ffff);
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
         }
 
         .game-wrapper {
             position: relative;
             display: inline-block;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-            border-radius: 15px;
+            border-radius: 10px;
             overflow: hidden;
+            background: #000;
+            box-shadow: 
+                0 0 50px rgba(255, 0, 255, 0.6),
+                0 0 100px rgba(0, 255, 255, 0.4),
+                inset 0 0 50px rgba(255, 0, 255, 0.2);
+            animation: boxGlow 2s ease-in-out infinite;
+        }
+
+        @keyframes boxGlow {
+            0%, 100% { 
+                box-shadow: 
+                    0 0 50px rgba(255, 0, 255, 0.6),
+                    0 0 100px rgba(0, 255, 255, 0.4),
+                    inset 0 0 50px rgba(255, 0, 255, 0.2);
+            }
+            50% { 
+                box-shadow: 
+                    0 0 80px rgba(255, 0, 255, 0.8),
+                    0 0 120px rgba(0, 255, 255, 0.6),
+                    inset 0 0 80px rgba(255, 0, 255, 0.3);
+            }
         }
 
         #gameCanvas {
             display: block;
-            background: radial-gradient(circle at 50% 50%, #252545, #0f0f1e);
-            border: 5px solid #fff;
+            background: #000;
+            border: 4px solid;
+            border-image: linear-gradient(90deg, #ff00ff, #00ffff, #ff00ff) 1;
         }
 
         .info {
             margin-top: 20px;
             font-size: 1.2em;
+            display: flex;
+            justify-content: space-around;
+            max-width: 400px;
+            gap: 20px;
         }
 
-        .score {
-            font-size: 1.8em;
-            font-weight: bold;
-            margin-bottom: 10px;
-            text-shadow: 0 0 10px rgba(78, 205, 196, 0.5);
+        .score, .combo {
+            font-size: 1.4em;
+            font-weight: 900;
+            background: linear-gradient(90deg, #ff00ff, #00ffff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: drop-shadow(0 0 20px #ff00ff);
+            animation: textGlow 1.5s ease-in-out infinite;
         }
 
-        .instructions {
-            font-size: 0.9em;
-            opacity: 0.9;
+        @keyframes textGlow {
+            0%, 100% { filter: drop-shadow(0 0 10px #ff00ff); }
+            50% { filter: drop-shadow(0 0 30px #00ffff); }
         }
 
         .game-over, .start-screen {
@@ -74,63 +134,99 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.95);
+            background: rgba(0, 0, 0, 0.98);
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             z-index: 10;
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(20px);
         }
 
         .hidden {
             display: none !important;
         }
 
-        .game-over h2, .start-screen h2 {
-            font-size: 2.5em;
-            margin-bottom: 20px;
-            color: #ff6b6b;
-            text-shadow: 0 0 20px rgba(255, 107, 107, 0.5);
+        .game-over h2 {
+            font-size: 4em;
+            margin-bottom: 30px;
+            background: linear-gradient(90deg, #ff0055, #ff00ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: drop-shadow(0 0 40px #ff0055);
+            animation: shakeTitle 0.5s ease-in-out infinite;
+        }
+
+        @keyframes shakeTitle {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
         }
 
         .start-screen h2 {
-            color: #4ecdc4;
-            text-shadow: 0 0 20px rgba(78, 205, 196, 0.5);
+            font-size: 3em;
+            margin-bottom: 30px;
+            background: linear-gradient(90deg, #00ffff, #ff00ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: drop-shadow(0 0 40px #00ffff);
         }
 
         .game-over p, .start-screen p {
             font-size: 1.3em;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
+            color: #fff;
+            text-shadow: 0 0 20px #ff00ff;
+        }
+
+        .final-stats {
+            margin: 30px 0;
+            font-size: 1.6em;
+        }
+
+        .restart-hint {
+            margin-top: 30px;
+            font-size: 1.3em;
+            background: linear-gradient(90deg, #ff00ff, #00ffff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: pulse 1.5s infinite;
         }
 
         button {
-            margin-top: 20px;
-            padding: 15px 40px;
-            font-size: 1.2em;
-            font-weight: bold;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            margin-top: 30px;
+            padding: 20px 60px;
+            font-size: 1.5em;
+            font-weight: 900;
+            font-family: 'Orbitron', sans-serif;
+            background: linear-gradient(90deg, #ff00ff, #00ffff);
+            color: #000;
             border: none;
             border-radius: 50px;
             cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s;
+            box-shadow: 0 0 40px rgba(255, 0, 255, 0.8);
+            text-transform: uppercase;
+            letter-spacing: 3px;
         }
 
         button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+            transform: scale(1.1);
+            box-shadow: 0 0 60px rgba(255, 0, 255, 1);
         }
 
         button:active {
-            transform: translateY(0);
+            transform: scale(0.95);
         }
 
-        #finalScore {
-            color: #4ecdc4;
-            font-size: 1.5em;
-            text-shadow: 0 0 10px rgba(78, 205, 196, 0.5);
+        .instructions {
+            margin-top: 15px;
+            font-size: 0.9em;
+            color: #888;
+            letter-spacing: 2px;
         }
     </style>
 </head>
@@ -140,54 +236,62 @@
         <div class="game-wrapper">
             <canvas id="gameCanvas" width="400" height="600"></canvas>
             <div id="gameOver" class="game-over hidden">
-                <h2>Game Over!</h2>
-                <p>Score: <span id="finalScore">0</span></p>
-                <button id="restartBtn">Play Again</button>
+                <h2>GAME OVER</h2>
+                <div class="final-stats">
+                    <p>SCORE: <span id="finalScore" style="color: #ff00ff;">0</span></p>
+                    <p>MAX COMBO: <span id="finalCombo" style="color: #00ffff;">0</span>x</p>
+                    <p>HIGH SCORE: <span id="displayHighScore" style="color: #ffff00;">0</span></p>
+                </div>
+                <p class="restart-hint">▶ PRESS SPACE TO RESTART ◀</p>
             </div>
             <div id="startScreen" class="start-screen">
-                <h2>Welcome to Polarity!</h2>
-                <p>Press SPACEBAR to switch sides</p>
-                <p>Avoid the obstacles!</p>
-                <button id="startBtn">Start Game</button>
+                <h2>◤ POLARITY ◢</h2>
+                <p>▸ PRESS SPACE TO SWITCH SIDES ◂</p>
+                <p>▸ DODGE OBSTACLES ◂</p>
+                <p>▸ BUILD MASSIVE COMBOS ◂</p>
+                <button id="startBtn">⚡ START ⚡</button>
             </div>
         </div>
         <div class="info">
-            <div class="score">Score: <span id="score">0</span></div>
-            <div class="instructions">Press SPACEBAR to switch walls</div>
+            <div class="score">SCORE: <span id="score">0</span></div>
+            <div class="combo" id="comboDisplay" style="display: none;">COMBO: <span id="combo">0</span>x</div>
         </div>
+        <div class="instructions">◆ SPACEBAR TO SWITCH ◆ SURVIVE ◆</div>
     </div>
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const scoreElement = document.getElementById('score');
+        const comboElement = document.getElementById('combo');
+        const comboDisplay = document.getElementById('comboDisplay');
         const finalScoreElement = document.getElementById('finalScore');
+        const finalComboElement = document.getElementById('finalCombo');
+        const displayHighScoreElement = document.getElementById('displayHighScore');
         const gameOverScreen = document.getElementById('gameOver');
         const startScreen = document.getElementById('startScreen');
-        const restartBtn = document.getElementById('restartBtn');
         const startBtn = document.getElementById('startBtn');
 
-        // Game constants
         const WALL_WIDTH = 3;
         const MAGNET_WIDTH = 38;
         const MAGNET_HEIGHT = 32;
-        const INITIAL_OBSTACLE_SPEED = 2.5;
-        const INITIAL_SPAWN_RATE = 90;
+        const INITIAL_OBSTACLE_SPEED = 3;
+        const INITIAL_SPAWN_RATE = 80;
 
-        // Obstacle types - emoji inspired!
         const OBSTACLE_TYPES = [
-            { name: 'bolt', minWidth: 20, maxWidth: 30, minHeight: 55, maxHeight: 85 }, // 🔩
-            { name: 'wrench', minWidth: 25, maxWidth: 35, minHeight: 70, maxHeight: 95 }, // 🔧
-            { name: 'gear', minWidth: 40, maxWidth: 65, minHeight: 40, maxHeight: 65 }, // ⚙️
-            { name: 'hammer', minWidth: 30, maxWidth: 45, minHeight: 65, maxHeight: 90 }, // 🔨
-            { name: 'lightning', minWidth: 20, maxWidth: 30, minHeight: 60, maxHeight: 90 }, // ⚡
-            { name: 'diamond', minWidth: 35, maxWidth: 50, minHeight: 35, maxHeight: 50 }, // 💎
-            { name: 'flask', minWidth: 30, maxWidth: 45, minHeight: 50, maxHeight: 75 } // 🧪
+            { name: 'bolt', minWidth: 20, maxWidth: 30, minHeight: 55, maxHeight: 85 },
+            { name: 'wrench', minWidth: 25, maxWidth: 35, minHeight: 70, maxHeight: 95 },
+            { name: 'gear', minWidth: 40, maxWidth: 65, minHeight: 40, maxHeight: 65 },
+            { name: 'hammer', minWidth: 30, maxWidth: 45, minHeight: 65, maxHeight: 90 },
+            { name: 'lightning', minWidth: 20, maxWidth: 30, minHeight: 60, maxHeight: 90 },
+            { name: 'diamond', minWidth: 35, maxWidth: 50, minHeight: 35, maxHeight: 50 }
         ];
 
-        // Game state
+        let highScore = parseInt(localStorage.getItem('polarityHighScore')) || 0;
         let gameState = {
             isPlaying: false,
             score: 0,
+            combo: 0,
+            maxCombo: 0,
             magnetSide: 'left',
             magnetY: canvas.height / 2,
             magnetX: WALL_WIDTH + 20,
@@ -199,27 +303,39 @@
             spawnCounter: 0,
             spawnRate: INITIAL_SPAWN_RATE,
             difficulty: 1,
-            particles: []
+            particles: [],
+            trails: [],
+            screenShake: 0,
+            chromaticAberration: 0,
+            floatingTexts: [],
+            bgPulse: 0,
+            time: 0
         };
 
-        // Event listeners
         document.addEventListener('keydown', (e) => {
             if (e.code === 'Space') {
                 e.preventDefault();
-                if (gameState.isPlaying) {
+                if (!gameState.isPlaying && !gameOverScreen.classList.contains('hidden')) {
+                    startGame();
+                } else if (!gameState.isPlaying && !startScreen.classList.contains('hidden')) {
+                    startGame();
+                } else if (gameState.isPlaying) {
                     switchSides();
                     createSwitchParticles();
+                    gameState.screenShake = 8;
+                    gameState.chromaticAberration = 15;
                 }
             }
         });
 
         startBtn.addEventListener('click', startGame);
-        restartBtn.addEventListener('click', startGame);
 
         function startGame() {
             gameState = {
                 isPlaying: true,
                 score: 0,
+                combo: 0,
+                maxCombo: 0,
                 magnetSide: 'left',
                 magnetY: canvas.height / 2,
                 magnetX: WALL_WIDTH + 20,
@@ -231,12 +347,19 @@
                 spawnCounter: 0,
                 spawnRate: INITIAL_SPAWN_RATE,
                 difficulty: 1,
-                particles: []
+                particles: [],
+                trails: [],
+                screenShake: 0,
+                chromaticAberration: 0,
+                floatingTexts: [],
+                bgPulse: 0,
+                time: 0
             };
             
             startScreen.classList.add('hidden');
             gameOverScreen.classList.add('hidden');
             scoreElement.textContent = '0';
+            comboDisplay.style.display = 'none';
             
             gameLoop();
         }
@@ -244,25 +367,49 @@
         function switchSides() {
             gameState.isTransitioning = true;
             gameState.magnetSide = gameState.magnetSide === 'left' ? 'right' : 'left';
-            
-            if (gameState.magnetSide === 'left') {
-                gameState.targetRotation = 0;
-            } else {
-                gameState.targetRotation = Math.PI;
-            }
+            gameState.targetRotation = gameState.magnetSide === 'left' ? 0 : Math.PI;
         }
 
         function createSwitchParticles() {
-            for (let i = 0; i < 12; i++) {
+            for (let i = 0; i < 30; i++) {
+                const angle = (Math.PI * 2 * i) / 30;
                 gameState.particles.push({
                     x: gameState.magnetX,
                     y: gameState.magnetY,
-                    vx: (Math.random() - 0.5) * 8,
-                    vy: (Math.random() - 0.5) * 8,
+                    vx: Math.cos(angle) * (5 + Math.random() * 5),
+                    vy: Math.sin(angle) * (5 + Math.random() * 5),
                     life: 1,
-                    color: '#ffdd00'
+                    size: 3 + Math.random() * 4,
+                    color: ['#ff00ff', '#00ffff', '#ffff00'][Math.floor(Math.random() * 3)]
                 });
             }
+        }
+
+        function createExplosion(x, y, count = 50) {
+            for (let i = 0; i < count; i++) {
+                const angle = (Math.PI * 2 * i) / count;
+                gameState.particles.push({
+                    x: x,
+                    y: y,
+                    vx: Math.cos(angle) * (3 + Math.random() * 8),
+                    vy: Math.sin(angle) * (3 + Math.random() * 8),
+                    life: 1,
+                    size: 2 + Math.random() * 5,
+                    color: ['#ff0055', '#ff00ff', '#ffff00'][Math.floor(Math.random() * 3)]
+                });
+            }
+        }
+
+        function addFloatingText(text, x, y, color, size = 24) {
+            gameState.floatingTexts.push({
+                text: text,
+                x: x,
+                y: y,
+                vy: -3,
+                life: 1,
+                color: color,
+                size: size
+            });
         }
 
         function updateParticles() {
@@ -270,25 +417,43 @@
                 const p = gameState.particles[i];
                 p.x += p.vx;
                 p.y += p.vy;
-                p.life -= 0.025;
+                p.life -= 0.015;
+                p.vx *= 0.98;
+                p.vy *= 0.98;
                 
                 if (p.life <= 0) {
                     gameState.particles.splice(i, 1);
                 }
             }
+
+            for (let i = gameState.floatingTexts.length - 1; i >= 0; i--) {
+                const t = gameState.floatingTexts[i];
+                t.y += t.vy;
+                t.life -= 0.012;
+                t.vy *= 0.95;
+                
+                if (t.life <= 0) {
+                    gameState.floatingTexts.splice(i, 1);
+                }
+            }
         }
 
-        function drawParticles() {
-            gameState.particles.forEach(p => {
-                ctx.save();
-                ctx.globalAlpha = p.life;
-                ctx.fillStyle = p.color;
-                ctx.shadowBlur = 15;
-                ctx.shadowColor = p.color;
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.restore();
+        function updateTrails() {
+            if (gameState.isTransitioning) {
+                gameState.trails.push({
+                    x: gameState.magnetX,
+                    y: gameState.magnetY,
+                    life: 1,
+                    color: gameState.magnetSide === 'left' ? '#ff00ff' : '#00ffff'
+                });
+            }
+
+            if (gameState.trails.length > 20) {
+                gameState.trails.shift();
+            }
+
+            gameState.trails.forEach(t => {
+                t.life -= 0.05;
             });
         }
 
@@ -298,15 +463,9 @@
             
             const width = type.minWidth + Math.random() * (type.maxWidth - type.minWidth);
             const height = type.minHeight + Math.random() * (type.maxHeight - type.minHeight);
-            
             const extension = 40 + Math.random() * 90;
             
-            let x;
-            if (side === 'left') {
-                x = WALL_WIDTH + extension / 2;
-            } else {
-                x = canvas.width - WALL_WIDTH - extension / 2;
-            }
+            let x = side === 'left' ? WALL_WIDTH + extension / 2 : canvas.width - WALL_WIDTH - extension / 2;
             
             gameState.obstacles.push({
                 x: x,
@@ -314,22 +473,20 @@
                 side: side,
                 width: extension,
                 height: height,
-                type: type.name
+                type: type.name,
+                dodged: false,
+                rotation: 0
             });
         }
 
         function updateGame() {
+            gameState.time += 0.016;
+            
             if (gameState.isTransitioning) {
-                let targetX;
-                if (gameState.magnetSide === 'left') {
-                    targetX = WALL_WIDTH + 20;
-                } else {
-                    targetX = canvas.width - WALL_WIDTH - 20;
-                }
-                
+                let targetX = gameState.magnetSide === 'left' ? WALL_WIDTH + 20 : canvas.width - WALL_WIDTH - 20;
                 const dx = targetX - gameState.magnetX;
                 if (Math.abs(dx) > 2) {
-                    gameState.magnetX += dx * 0.25;
+                    gameState.magnetX += dx * 0.35;
                 } else {
                     gameState.magnetX = targetX;
                     gameState.isTransitioning = false;
@@ -338,12 +495,25 @@
             
             const rotDiff = gameState.targetRotation - gameState.magnetRotation;
             if (Math.abs(rotDiff) > 0.1) {
-                gameState.magnetRotation += rotDiff * 0.2;
+                gameState.magnetRotation += rotDiff * 0.3;
             } else {
                 gameState.magnetRotation = gameState.targetRotation;
             }
             
             updateParticles();
+            updateTrails();
+            
+            if (gameState.screenShake > 0) {
+                gameState.screenShake *= 0.85;
+                if (gameState.screenShake < 0.5) gameState.screenShake = 0;
+            }
+            
+            if (gameState.chromaticAberration > 0) {
+                gameState.chromaticAberration *= 0.9;
+                if (gameState.chromaticAberration < 0.5) gameState.chromaticAberration = 0;
+            }
+            
+            gameState.bgPulse += 0.05;
             
             gameState.spawnCounter++;
             if (gameState.spawnCounter >= gameState.spawnRate) {
@@ -354,105 +524,259 @@
             for (let i = gameState.obstacles.length - 1; i >= 0; i--) {
                 const obstacle = gameState.obstacles[i];
                 obstacle.y += gameState.obstacleSpeed;
+                obstacle.rotation += 0.02;
                 
                 if (checkCollision(obstacle)) {
+                    createExplosion(gameState.magnetX, gameState.magnetY, 80);
+                    gameState.screenShake = 30;
+                    gameState.chromaticAberration = 30;
                     endGame();
                     return;
                 }
                 
+                if (!obstacle.dodged && obstacle.y > gameState.magnetY + MAGNET_HEIGHT / 2) {
+                    obstacle.dodged = true;
+                    const dist = Math.abs(obstacle.x - gameState.magnetX);
+                    
+                    if (dist < 70) {
+                        const bonus = 25;
+                        gameState.score += bonus;
+                        gameState.combo++;
+                        addFloatingText('CLOSE! +' + bonus, obstacle.x, obstacle.y, '#ffff00', 28);
+                        createExplosion(obstacle.x, obstacle.y, 20);
+                        gameState.screenShake = 5;
+                    } else {
+                        gameState.combo++;
+                    }
+                    
+                    if (gameState.combo > 0) {
+                        comboDisplay.style.display = 'block';
+                        comboElement.textContent = gameState.combo;
+                        
+                        if (gameState.combo > gameState.maxCombo) {
+                            gameState.maxCombo = gameState.combo;
+                        }
+                        
+                        if (gameState.combo % 10 === 0) {
+                            addFloatingText('★ ' + gameState.combo + 'x COMBO! ★', canvas.width / 2, canvas.height / 3, '#ff00ff', 32);
+                            gameState.bgPulse = 0;
+                        }
+                    }
+                }
+                
                 if (obstacle.y > canvas.height) {
                     gameState.obstacles.splice(i, 1);
-                    gameState.score += 10;
+                    let points = 10;
+                    if (gameState.combo >= 5) {
+                        points = 10 * Math.floor(gameState.combo / 5 + 1);
+                    }
+                    gameState.score += points;
                     scoreElement.textContent = gameState.score;
                     
-                    if (gameState.score % 50 === 0) {
-                        gameState.difficulty += 0.2;
-                        gameState.obstacleSpeed = INITIAL_OBSTACLE_SPEED + gameState.difficulty * 0.7;
-                        gameState.spawnRate = Math.max(30, INITIAL_SPAWN_RATE - gameState.difficulty * 8);
+                    if (gameState.score % 100 === 0) {
+                        gameState.difficulty += 0.15;
+                        gameState.obstacleSpeed = INITIAL_OBSTACLE_SPEED + gameState.difficulty * 0.6;
+                        gameState.spawnRate = Math.max(35, INITIAL_SPAWN_RATE - gameState.difficulty * 6);
+                        addFloatingText('◆ SPEED UP! ◆', canvas.width / 2, canvas.height / 2, '#00ffff', 30);
                     }
                 }
             }
         }
 
         function checkCollision(obstacle) {
-            // Precise collision - magnet is a U-shape, obstacles are rectangles rotated
             const magnetHalfWidth = MAGNET_WIDTH / 2;
             const magnetHalfHeight = MAGNET_HEIGHT / 2;
             
-            // Get magnet bounds (the U-shaped area)
             const magnetLeft = gameState.magnetX - magnetHalfWidth;
             const magnetRight = gameState.magnetX + magnetHalfWidth;
             const magnetTop = gameState.magnetY - magnetHalfHeight;
             const magnetBottom = gameState.magnetY + magnetHalfHeight;
             
-            // Obstacle is rotated 90 degrees, so width becomes height
             const obsHalfWidth = obstacle.width / 2;
-            const obsHalfHeight = obstacle.height / 2;
-            
             const obstacleLeft = obstacle.x - obsHalfWidth;
             const obstacleRight = obstacle.x + obsHalfWidth;
             const obstacleTop = obstacle.y;
             const obstacleBottom = obstacle.y + obstacle.height;
             
-            // Check if rectangles overlap
-            if (magnetRight < obstacleLeft || magnetLeft > obstacleRight ||
-                magnetBottom < obstacleTop || magnetTop > obstacleBottom) {
-                return false; // No collision
-            }
-            
-            return true; // Collision!
+            return !(magnetRight < obstacleLeft || magnetLeft > obstacleRight ||
+                     magnetBottom < obstacleTop || magnetTop > obstacleBottom);
         }
 
         function drawGame() {
-            // Background
-            const bgGradient = ctx.createRadialGradient(canvas.width/2, canvas.height/2, 0, 
-                                                        canvas.width/2, canvas.height/2, canvas.width);
-            bgGradient.addColorStop(0, '#252545');
-            bgGradient.addColorStop(1, '#0f0f1e');
-            ctx.fillStyle = bgGradient;
+            ctx.save();
+            
+            // Screen shake
+            if (gameState.screenShake > 0) {
+                ctx.translate(
+                    (Math.random() - 0.5) * gameState.screenShake,
+                    (Math.random() - 0.5) * gameState.screenShake
+                );
+            }
+            
+            // Background with animated gradient
+            const bgGrad = ctx.createRadialGradient(canvas.width/2, canvas.height/2, 0, 
+                                                    canvas.width/2, canvas.height/2, canvas.width);
+            bgGrad.addColorStop(0, `rgba(20, 0, 40, ${0.5 + Math.sin(gameState.bgPulse) * 0.3})`);
+            bgGrad.addColorStop(1, '#000000');
+            ctx.fillStyle = bgGrad;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
-            // Glowing walls
-            ctx.shadowBlur = 15;
+            // Grid effect
+            ctx.strokeStyle = 'rgba(255, 0, 255, 0.05)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < canvas.width; i += 30) {
+                ctx.beginPath();
+                ctx.moveTo(i, 0);
+                ctx.lineTo(i, canvas.height);
+                ctx.stroke();
+            }
+            for (let i = 0; i < canvas.height; i += 30) {
+                ctx.beginPath();
+                ctx.moveTo(0, i);
+                ctx.lineTo(canvas.width, i);
+                ctx.stroke();
+            }
+            
+            // Speed lines
+            if (gameState.obstacleSpeed > 4) {
+                ctx.strokeStyle = `rgba(255, 0, 255, ${0.1 + gameState.obstacleSpeed * 0.02})`;
+                ctx.lineWidth = 2;
+                for (let i = 0; i < 8; i++) {
+                    const x = Math.random() * canvas.width;
+                    const y = (gameState.time * 500 + i * 100) % canvas.height;
+                    ctx.beginPath();
+                    ctx.moveTo(x, y);
+                    ctx.lineTo(x, y + 50);
+                    ctx.stroke();
+                }
+            }
+            
+            // Walls with INSANE glow
+            const wallGrad1 = ctx.createLinearGradient(0, 0, WALL_WIDTH * 3, 0);
+            wallGrad1.addColorStop(0, '#ff00ff');
+            wallGrad1.addColorStop(1, 'transparent');
+            const wallGrad2 = ctx.createLinearGradient(canvas.width, 0, canvas.width - WALL_WIDTH * 3, 0);
+            wallGrad2.addColorStop(0, '#00ffff');
+            wallGrad2.addColorStop(1, 'transparent');
+            
+            ctx.shadowBlur = 40;
+            ctx.shadowColor = '#ff00ff';
+            ctx.fillStyle = '#ff00ff';
+            ctx.fillRect(0, 0, WALL_WIDTH, canvas.height);
+            
             ctx.shadowColor = '#00ffff';
             ctx.fillStyle = '#00ffff';
-            ctx.fillRect(0, 0, WALL_WIDTH, canvas.height);
             ctx.fillRect(canvas.width - WALL_WIDTH, 0, WALL_WIDTH, canvas.height);
+            
+            ctx.fillStyle = wallGrad1;
+            ctx.fillRect(WALL_WIDTH, 0, WALL_WIDTH * 3, canvas.height);
+            ctx.fillStyle = wallGrad2;
+            ctx.fillRect(canvas.width - WALL_WIDTH * 4, 0, WALL_WIDTH * 3, canvas.height);
+            
             ctx.shadowBlur = 0;
             
-            drawParticles();
+            // Trails
+            gameState.trails.forEach((t, i) => {
+                if (t.life > 0) {
+                    ctx.save();
+                    ctx.globalAlpha = t.life * 0.6;
+                    ctx.shadowBlur = 30;
+                    ctx.shadowColor = t.color;
+                    ctx.fillStyle = t.color;
+                    ctx.beginPath();
+                    ctx.arc(t.x, t.y, 15, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                }
+            });
             
+            // Particles
+            gameState.particles.forEach(p => {
+                ctx.save();
+                ctx.globalAlpha = p.life;
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = p.color;
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            });
+            
+            // Obstacles with GLOW
             gameState.obstacles.forEach(obstacle => {
                 drawObstacle(obstacle);
             });
             
+            // Magnet with MAXIMUM GLOW
             drawMagnet(gameState.magnetX, gameState.magnetY, gameState.magnetRotation);
+            
+            // Floating texts
+            gameState.floatingTexts.forEach(t => {
+                ctx.save();
+                ctx.globalAlpha = t.life;
+                ctx.font = `bold ${t.size}px Orbitron`;
+                ctx.textAlign = 'center';
+                ctx.shadowBlur = 30;
+                ctx.shadowColor = t.color;
+                ctx.fillStyle = t.color;
+                ctx.fillText(t.text, t.x, t.y);
+                ctx.restore();
+            });
+            
+            ctx.restore();
+            
+            // Chromatic aberration effect
+            if (gameState.chromaticAberration > 2) {
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const offset = Math.floor(gameState.chromaticAberration / 2);
+                const data = imageData.data;
+                const tempData = new Uint8ClampedArray(data);
+                
+                for (let i = 0; i < data.length; i += 4) {
+                    const redIndex = i - offset * 4 * canvas.width;
+                    const blueIndex = i + offset * 4 * canvas.width;
+                    
+                    if (redIndex >= 0 && redIndex < data.length) {
+                        data[i] = tempData[redIndex];
+                    }
+                    if (blueIndex >= 0 && blueIndex < data.length) {
+                        data[i + 2] = tempData[blueIndex + 2];
+                    }
+                }
+                
+                ctx.putImageData(imageData, 0, 0);
+            }
         }
 
         function drawObstacle(obstacle) {
             ctx.save();
             
             ctx.translate(obstacle.x, obstacle.y + obstacle.height / 2);
-            if (obstacle.side === 'left') {
-                ctx.rotate(Math.PI / 2);
-            } else {
-                ctx.rotate(-Math.PI / 2);
-            }
+            ctx.rotate(obstacle.side === 'left' ? Math.PI / 2 : -Math.PI / 2);
             
             const w = obstacle.height;
             const h = obstacle.width;
             const x = -w / 2;
             const y = -h / 2;
             
-            ctx.shadowBlur = 8;
-            ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+            const colors = {
+                'bolt': '#ff0055',
+                'wrench': '#ff00ff',
+                'gear': '#ff0088',
+                'hammer': '#ff0066',
+                'lightning': '#ffff00',
+                'diamond': '#00ffff'
+            };
+            
+            ctx.shadowBlur = 30;
+            ctx.shadowColor = colors[obstacle.type] || '#ff0055';
+            ctx.fillStyle = colors[obstacle.type] || '#ff0055';
+            ctx.strokeStyle = colors[obstacle.type] || '#ff0055';
+            ctx.lineWidth = 3;
             
             switch(obstacle.type) {
-                case 'bolt': // 🔩
-                    // Hex head
-                    ctx.fillStyle = '#c0c0c0';
-                    ctx.strokeStyle = '#808080';
-                    ctx.lineWidth = 2;
+                case 'bolt':
                     ctx.beginPath();
                     for (let i = 0; i < 6; i++) {
                         const angle = (Math.PI / 3) * i;
@@ -464,68 +788,24 @@
                     ctx.closePath();
                     ctx.fill();
                     ctx.stroke();
-                    
-                    // Threaded shaft
-                    ctx.fillStyle = '#a0a0a0';
-                    ctx.fillRect(x + w * 0.35, y + h * 0.38, w * 0.6, h * 0.24);
-                    
-                    // Thread lines
-                    ctx.strokeStyle = '#707070';
-                    ctx.lineWidth = 1.5;
-                    for (let i = 0; i < 8; i++) {
-                        const tx = x + w * (0.4 + i * 0.07);
-                        ctx.beginPath();
-                        ctx.moveTo(tx, y + h * 0.38);
-                        ctx.lineTo(tx, y + h * 0.62);
-                        ctx.stroke();
-                    }
+                    ctx.fillRect(x + w * 0.35, y + h * 0.4, w * 0.6, h * 0.2);
                     break;
                     
-                case 'wrench': // 🔧
-                    // Handle
-                    ctx.fillStyle = '#b0b0b0';
-                    ctx.strokeStyle = '#707070';
-                    ctx.lineWidth = 2;
+                case 'wrench':
                     ctx.fillRect(x + w * 0.3, y + h * 0.4, w * 0.5, h * 0.2);
-                    ctx.strokeRect(x + w * 0.3, y + h * 0.4, w * 0.5, h * 0.2);
-                    
-                    // Open jaw
-                    ctx.beginPath();
-                    ctx.moveTo(x + w * 0.8, y + h * 0.35);
-                    ctx.lineTo(x + w * 0.95, y + h * 0.25);
-                    ctx.lineTo(x + w, y + h * 0.3);
-                    ctx.lineTo(x + w, y + h * 0.7);
-                    ctx.lineTo(x + w * 0.95, y + h * 0.75);
-                    ctx.lineTo(x + w * 0.8, y + h * 0.65);
-                    ctx.closePath();
-                    ctx.fill();
-                    ctx.stroke();
-                    
-                    // Closed end
                     ctx.beginPath();
                     ctx.arc(x + w * 0.15, y + h / 2, w * 0.15, 0, Math.PI * 2);
                     ctx.fill();
                     ctx.stroke();
-                    
-                    // Hole
-                    ctx.fillStyle = '#0f0f1e';
-                    ctx.beginPath();
-                    ctx.arc(x + w * 0.15, y + h / 2, w * 0.08, 0, Math.PI * 2);
-                    ctx.fill();
                     break;
                     
-                case 'gear': // ⚙️
-                    ctx.fillStyle = '#909090';
-                    ctx.strokeStyle = '#505050';
-                    ctx.lineWidth = 2;
-                    
+                case 'gear':
                     const teeth = 12;
                     const innerRadius = Math.min(w, h) * 0.32;
                     const outerRadius = Math.min(w, h) * 0.45;
-                    
                     ctx.beginPath();
                     for (let i = 0; i < teeth * 2; i++) {
-                        const angle = (Math.PI * i) / teeth;
+                        const angle = (Math.PI * i) / teeth + obstacle.rotation;
                         const radius = i % 2 === 0 ? outerRadius : innerRadius;
                         const gx = x + w / 2 + Math.cos(angle) * radius;
                         const gy = y + h / 2 + Math.sin(angle) * radius;
@@ -535,63 +815,15 @@
                     ctx.closePath();
                     ctx.fill();
                     ctx.stroke();
-                    
-                    // Center hole
-                    ctx.fillStyle = '#0f0f1e';
-                    ctx.beginPath();
-                    ctx.arc(x + w / 2, y + h / 2, innerRadius * 0.5, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.stroke();
-                    
-                    // Bolt holes
-                    for (let i = 0; i < 3; i++) {
-                        const angle = (Math.PI * 2 / 3) * i;
-                        const bx = x + w / 2 + Math.cos(angle) * innerRadius * 0.75;
-                        const by = y + h / 2 + Math.sin(angle) * innerRadius * 0.75;
-                        ctx.fillStyle = '#303030';
-                        ctx.beginPath();
-                        ctx.arc(bx, by, w * 0.05, 0, Math.PI * 2);
-                        ctx.fill();
-                    }
                     break;
                     
-                case 'hammer': // 🔨
-                    // Handle
-                    ctx.fillStyle = '#8b4513';
-                    ctx.strokeStyle = '#5d2f0b';
-                    ctx.lineWidth = 2;
+                case 'hammer':
                     ctx.fillRect(x + w * 0.1, y + h * 0.42, w * 0.6, h * 0.16);
-                    ctx.strokeRect(x + w * 0.1, y + h * 0.42, w * 0.6, h * 0.16);
-                    
-                    // Head
-                    ctx.fillStyle = '#505050';
-                    ctx.strokeStyle = '#303030';
                     ctx.fillRect(x + w * 0.65, y + h * 0.25, w * 0.3, h * 0.5);
-                    ctx.strokeRect(x + w * 0.65, y + h * 0.25, w * 0.3, h * 0.5);
-                    
-                    // Claw
-                    ctx.beginPath();
-                    ctx.moveTo(x + w * 0.65, y + h * 0.3);
-                    ctx.lineTo(x + w * 0.6, y + h * 0.2);
-                    ctx.lineTo(x + w * 0.55, y + h * 0.3);
-                    ctx.closePath();
-                    ctx.fill();
-                    ctx.stroke();
-                    
-                    ctx.beginPath();
-                    ctx.moveTo(x + w * 0.65, y + h * 0.7);
-                    ctx.lineTo(x + w * 0.6, y + h * 0.8);
-                    ctx.lineTo(x + w * 0.55, y + h * 0.7);
-                    ctx.closePath();
-                    ctx.fill();
-                    ctx.stroke();
                     break;
                     
-                case 'lightning': // ⚡
-                    ctx.fillStyle = '#ffff00';
-                    ctx.strokeStyle = '#ffcc00';
-                    ctx.lineWidth = 2;
-                    
+                case 'lightning':
+                    ctx.shadowBlur = 50;
                     ctx.beginPath();
                     ctx.moveTo(x + w * 0.5, y);
                     ctx.lineTo(x + w * 0.3, y + h * 0.4);
@@ -602,24 +834,10 @@
                     ctx.lineTo(x + w * 0.8, y);
                     ctx.closePath();
                     ctx.fill();
-                    ctx.stroke();
-                    
-                    // Inner glow
-                    ctx.shadowBlur = 20;
-                    ctx.shadowColor = '#ffff00';
-                    ctx.fill();
-                    ctx.shadowBlur = 0;
                     break;
                     
-                case 'diamond': // 💎
-                    const diamondGrad = ctx.createLinearGradient(x, y, x + w, y + h);
-                    diamondGrad.addColorStop(0, '#00ffff');
-                    diamondGrad.addColorStop(0.5, '#0099ff');
-                    diamondGrad.addColorStop(1, '#0066ff');
-                    ctx.fillStyle = diamondGrad;
-                    ctx.strokeStyle = '#0044aa';
-                    ctx.lineWidth = 2;
-                    
+                case 'diamond':
+                    ctx.shadowBlur = 40;
                     ctx.beginPath();
                     ctx.moveTo(x + w * 0.5, y);
                     ctx.lineTo(x + w * 0.85, y + h * 0.35);
@@ -628,59 +846,6 @@
                     ctx.closePath();
                     ctx.fill();
                     ctx.stroke();
-                    
-                    // Facets
-                    ctx.strokeStyle = '#6699ff';
-                    ctx.lineWidth = 1.5;
-                    ctx.beginPath();
-                    ctx.moveTo(x + w * 0.5, y);
-                    ctx.lineTo(x + w * 0.5, y + h);
-                    ctx.moveTo(x + w * 0.15, y + h * 0.35);
-                    ctx.lineTo(x + w * 0.85, y + h * 0.35);
-                    ctx.stroke();
-                    
-                    // Sparkle
-                    ctx.shadowBlur = 15;
-                    ctx.shadowColor = '#00ffff';
-                    ctx.fillStyle = '#ffffff';
-                    ctx.fillRect(x + w * 0.48, y + h * 0.15, w * 0.04, h * 0.1);
-                    ctx.shadowBlur = 0;
-                    break;
-                    
-                case 'flask': // 🧪
-                    // Glass body
-                    ctx.fillStyle = 'rgba(200, 200, 255, 0.4)';
-                    ctx.strokeStyle = '#8888ff';
-                    ctx.lineWidth = 2;
-                    
-                    ctx.beginPath();
-                    ctx.moveTo(x + w * 0.35, y);
-                    ctx.lineTo(x + w * 0.35, y + h * 0.3);
-                    ctx.lineTo(x + w * 0.1, y + h * 0.5);
-                    ctx.lineTo(x + w * 0.1, y + h * 0.9);
-                    ctx.quadraticCurveTo(x + w * 0.1, y + h, x + w * 0.2, y + h);
-                    ctx.lineTo(x + w * 0.8, y + h);
-                    ctx.quadraticCurveTo(x + w * 0.9, y + h, x + w * 0.9, y + h * 0.9);
-                    ctx.lineTo(x + w * 0.9, y + h * 0.5);
-                    ctx.lineTo(x + w * 0.65, y + h * 0.3);
-                    ctx.lineTo(x + w * 0.65, y);
-                    ctx.closePath();
-                    ctx.fill();
-                    ctx.stroke();
-                    
-                    // Liquid
-                    ctx.fillStyle = 'rgba(0, 255, 100, 0.7)';
-                    ctx.beginPath();
-                    ctx.moveTo(x + w * 0.15, y + h * 0.7);
-                    ctx.lineTo(x + w * 0.2, y + h * 0.95);
-                    ctx.lineTo(x + w * 0.8, y + h * 0.95);
-                    ctx.lineTo(x + w * 0.85, y + h * 0.7);
-                    ctx.closePath();
-                    ctx.fill();
-                    
-                    // Shine
-                    ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-                    ctx.fillRect(x + w * 0.55, y + h * 0.05, w * 0.08, h * 0.25);
                     break;
             }
             
@@ -692,62 +857,39 @@
             ctx.translate(x, y);
             ctx.rotate(rotation);
             
-            // Draw CLASSIC horseshoe magnet like 🧲 emoji
             const w = MAGNET_WIDTH;
             const h = MAGNET_HEIGHT;
             const thickness = 12;
             
-            // Outer U-shape (RED)
-            ctx.fillStyle = '#ff0000';
-            ctx.strokeStyle = '#cc0000';
-            ctx.lineWidth = 2;
+            // INSANE GLOW
+            ctx.shadowBlur = 50;
+            ctx.shadowColor = gameState.magnetSide === 'left' ? '#ff00ff' : '#00ffff';
             
-            ctx.beginPath();
-            // Left vertical part
-            ctx.rect(-w/2, -h/2, thickness, h);
-            ctx.fill();
-            ctx.stroke();
+            const magnetGrad = ctx.createLinearGradient(-w/2, 0, w/2, 0);
+            magnetGrad.addColorStop(0, '#ff00ff');
+            magnetGrad.addColorStop(0.5, '#ffffff');
+            magnetGrad.addColorStop(1, '#00ffff');
             
-            // Right vertical part
-            ctx.beginPath();
-            ctx.rect(w/2 - thickness, -h/2, thickness, h);
-            ctx.fill();
-            ctx.stroke();
+            ctx.fillStyle = magnetGrad;
+            ctx.fillRect(-w/2, -h/2, thickness, h);
+            ctx.fillRect(w/2 - thickness, -h/2, thickness, h);
+            ctx.fillRect(-w/2, h/2 - thickness, w, thickness);
             
-            // Bottom connector
-            ctx.beginPath();
-            ctx.rect(-w/2, h/2 - thickness, w, thickness);
-            ctx.fill();
-            ctx.stroke();
-            
-            // Silver/gray caps on the ends
-            ctx.fillStyle = '#d0d0d0';
-            ctx.strokeStyle = '#909090';
-            
-            // Top left cap
-            ctx.fillRect(-w/2 - 2, -h/2 - 4, thickness + 4, 6);
-            ctx.strokeRect(-w/2 - 2, -h/2 - 4, thickness + 4, 6);
-            
-            // Top right cap
-            ctx.fillRect(w/2 - thickness - 2, -h/2 - 4, thickness + 4, 6);
-            ctx.strokeRect(w/2 - thickness - 2, -h/2 - 4, thickness + 4, 6);
-            
-            // Add N and S labels
+            // Caps with extreme glow
+            ctx.shadowBlur = 60;
+            ctx.shadowColor = '#ffffff';
             ctx.fillStyle = '#ffffff';
-            ctx.font = 'bold 14px Arial';
+            ctx.fillRect(-w/2 - 2, -h/2 - 6, thickness + 4, 8);
+            ctx.fillRect(w/2 - thickness - 2, -h/2 - 6, thickness + 4, 8);
+            
+            // Labels
+            ctx.shadowBlur = 20;
+            ctx.fillStyle = '#000';
+            ctx.font = 'bold 16px Orbitron';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillText('N', -w/2 + thickness/2, -h/4);
             ctx.fillText('S', w/2 - thickness/2, -h/4);
-            
-            // Glow effect
-            ctx.shadowBlur = 20;
-            ctx.shadowColor = '#ff0000';
-            ctx.globalAlpha = 0.3;
-            ctx.fillStyle = '#ff0000';
-            ctx.fillRect(-w/2 - 5, -h/2 - 5, thickness + 10, h + 10);
-            ctx.fillRect(w/2 - thickness - 5, -h/2 - 5, thickness + 10, h + 10);
-            ctx.fillRect(-w/2 - 5, h/2 - thickness - 5, w + 10, thickness + 10);
             
             ctx.restore();
         }
@@ -755,7 +897,17 @@
         function endGame() {
             gameState.isPlaying = false;
             finalScoreElement.textContent = gameState.score;
-            gameOverScreen.classList.remove('hidden');
+            finalComboElement.textContent = gameState.maxCombo;
+            
+            if (gameState.score > highScore) {
+                highScore = gameState.score;
+                localStorage.setItem('polarityHighScore', highScore);
+            }
+            displayHighScoreElement.textContent = highScore;
+            
+            setTimeout(() => {
+                gameOverScreen.classList.remove('hidden');
+            }, 200);
         }
 
         function gameLoop() {
