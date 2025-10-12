@@ -299,6 +299,9 @@
                     this.x += (dx / dist) * this.speed * timeScale;
                     this.y += (dy / dist) * this.speed * timeScale;
                 }
+                
+                // World movement (simulate forward motion)
+                this.y += gameState.worldSpeed * timeScale;
             }
 
             draw() {
@@ -333,6 +336,9 @@
             }
 
             update(timeScale) {
+                // World movement (simulate forward motion)
+                this.y += gameState.worldSpeed * timeScale;
+                
                 if (this.cooldown > 0) {
                     this.cooldown -= timeScale;
                     return;
@@ -403,6 +409,9 @@
             }
 
             update(timeScale) {
+                // World movement (simulate forward motion)
+                this.y += gameState.worldSpeed * timeScale;
+                
                 this.angle += this.rotationSpeed * timeScale;
                 this.shootTimer += timeScale;
 
@@ -448,23 +457,9 @@
 
         function spawnEnemy() {
             const padding = 30;
-            const side = Math.floor(Math.random() * 4);
-            let x, y;
-
-            // Spawn on edges
-            if (side === 0) { // top
-                x = padding + Math.random() * (canvas.width - padding * 2);
-                y = padding;
-            } else if (side === 1) { // right
-                x = canvas.width - padding;
-                y = padding + Math.random() * (canvas.height - padding * 2);
-            } else if (side === 2) { // bottom
-                x = padding + Math.random() * (canvas.width - padding * 2);
-                y = canvas.height - padding;
-            } else { // left
-                x = padding;
-                y = padding + Math.random() * (canvas.height - padding * 2);
-            }
+            // Always spawn at top (moving forward through space)
+            const x = padding + Math.random() * (canvas.width - padding * 2);
+            const y = -50; // Spawn above screen
 
             // Random enemy type
             const types = ['chaser', 'sniper', 'turret'];
@@ -508,7 +503,7 @@
                     y: canvas.height / 2,
                     targetX: canvas.width / 2,
                     targetY: canvas.height / 2,
-                    radius: 12,
+                    radius: 18,
                     velocityX: 0,
                     velocityY: 0,
                     speed: 0
@@ -516,6 +511,7 @@
                 timeScale: 1.0,
                 targetTimeScale: 1.0,
                 maxPlayerSpeed: 15,
+                worldSpeed: 2,
                 enemies: [],
                 bullets: [],
                 particles: [],
@@ -599,6 +595,9 @@
                 const bullet = gameState.bullets[i];
                 bullet.x += bullet.vx * gameState.timeScale;
                 bullet.y += bullet.vy * gameState.timeScale;
+                
+                // World movement (simulate forward motion)
+                bullet.y += gameState.worldSpeed * gameState.timeScale;
 
                 // Remove off-screen bullets
                 if (bullet.x < -50 || bullet.x > canvas.width + 50 || 
@@ -606,6 +605,30 @@
                     gameState.bullets.splice(i, 1);
                     continue;
                 }
+
+                // Collision with chasers (friendly fire!)
+                let bulletRemoved = false;
+                for (let j = gameState.enemies.length - 1; j >= 0; j--) {
+                    const enemy = gameState.enemies[j];
+                    if (enemy.type === 'chaser') {
+                        const dx2 = bullet.x - enemy.x;
+                        const dy2 = bullet.y - enemy.y;
+                        const dist2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
+                        
+                        if (dist2 < bullet.radius + enemy.radius) {
+                            createParticles(enemy.x, enemy.y, enemy.color, 15);
+                            gameState.enemies.splice(j, 1);
+                            gameState.bullets.splice(i, 1);
+                            gameState.score += 25; // Bonus for clever dodging!
+                            scoreElement.textContent = gameState.score;
+                            playSound(900, 0.1);
+                            bulletRemoved = true;
+                            break;
+                        }
+                    }
+                }
+                
+                if (bulletRemoved) continue;
 
                 // Collision with player
                 const dx = bullet.x - gameState.player.x;
@@ -677,7 +700,7 @@
             gameState.enemies.forEach(enemy => enemy.draw());
 
             // Player
-            const playerColor = gameState.timeScale < 0.3 ? '#0088ff' : (gameState.timeScale > 0.7 ? '#ff0055' : '#333');
+            const playerColor = '#000';
             ctx.save();
             ctx.translate(gameState.player.x, gameState.player.y);
             
