@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>PULSE</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@900&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Orbitron', sans-serif;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+            touch-action: none;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 50% 50%, #00ff8822, transparent 70%);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.8; }
+        }
+
+        .container {
+            text-align: center;
+            padding: 10px;
+            position: relative;
+        }
+
+        h1 {
+            font-size: 4em;
+            margin-bottom: 15px;
+            letter-spacing: 20px;
+            background: linear-gradient(90deg, #00ff88, #ffff00, #00ff88);
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradientShift 3s ease infinite;
+            filter: drop-shadow(0 0 30px #00ff88) drop-shadow(0 0 60px #ffff00);
+            font-weight: 900;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .game-wrapper {
+            position: relative;
+            display: inline-block;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #000;
+            box-shadow: 0 0 50px rgba(0, 255, 136, 0.6), 0 0 100px rgba(255, 255, 0, 0.4);
+        }
+
+        #gameCanvas {
+            display: block;
+            background: #000;
+            border: 4px solid;
+            border-image: linear-gradient(90deg, #00ff88, #ffff00, #00ff88) 1;
+            cursor: pointer;
+        }
+
+        .info {
+            margin-top: 20px;
+            font-size: 1.4em;
+            font-weight: 900;
+            background: linear-gradient(90deg, #00ff88, #ffff00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: drop-shadow(0 0 20px #00ff88);
+        }
+
+        .instructions {
+            margin-top: 15px;
+            font-size: 0.9em;
+            color: #888;
+            letter-spacing: 2px;
+        }
+
+        .game-over, .start-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.98);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            backdrop-filter: blur(20px);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .game-over h2 {
+            font-size: 4em;
+            background: linear-gradient(90deg, #ff0055, #ff00ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: drop-shadow(0 0 40px #ff0055);
+        }
+
+        .start-screen h2 {
+            font-size: 3em;
+            background: linear-gradient(90deg, #00ff88, #ffff00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: drop-shadow(0 0 40px #00ff88);
+        }
+
+        .game-over p, .start-screen p {
+            font-size: 1.3em;
+            margin: 15px 0;
+            color: #fff;
+            text-shadow: 0 0 20px #00ff88;
+        }
+
+        button {
+            margin: 15px 10px;
+            padding: 18px 50px;
+            font-size: 1.4em;
+            font-weight: 900;
+            font-family: 'Orbitron', sans-serif;
+            background: linear-gradient(90deg, #00ff88, #ffff00);
+            color: #000;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 0 40px rgba(0, 255, 136, 0.8);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+
+        button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 60px rgba(0, 255, 136, 1);
+        }
+
+        .button-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            padding: 12px 30px;
+            font-size: 1em;
+        }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 2.5em; letter-spacing: 12px; }
+            .subtitle { font-size: 1em; }
+            .info { font-size: 1.2em; }
+            button { padding: 15px 35px; font-size: 1.2em; }
+            .game-over h2 { font-size: 2.5em; }
+            .start-screen h2 { font-size: 2em; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>PULSE</h1>
+        <div class="game-wrapper">
+            <canvas id="gameCanvas" width="400" height="600"></canvas>
+            
+            <div id="gameOver" class="game-over hidden">
+                <h2>GAME OVER</h2>
+                <p>SCORE: <span id="finalScore" style="color: #00ff88;">0</span></p>
+                <p>HIGH SCORE: <span id="highScoreDisplay" style="color: #ffff00;">0</span></p>
+                <button onclick="startGame()">🔄 PLAY AGAIN 🔄</button>
+                <button class="button-secondary" onclick="window.location.href='index.html'">◀ BACK TO MENU</button>
+            </div>
+            
+            <div id="startScreen" class="start-screen">
+                <h2>◉ PULSE ◉</h2>
+                <p>⭕ You expand and contract rhythmically</p>
+                <p>⌛ TAP/SPACE to lock your size</p>
+                <p>🎯 Fit through the gaps in walls</p>
+                <p>💀 Wrong size = Game Over</p>
+                <button id="startBtn">⚡ START ⚡</button>
+                <button class="button-secondary" onclick="window.location.href='index.html'">◀ BACK</button>
+            </div>
+        </div>
+        <div class="info">SCORE: <span id="score">0</span></div>
+        <div class="instructions" id="controlHint">◆ SPACE/TAP TO LOCK SIZE ◆ FIT THROUGH GAPS ◆</div>
+    </div>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreElement = document.getElementById('score');
+        const finalScoreElement = document.getElementById('finalScore');
+        const highScoreDisplay = document.getElementById('highScoreDisplay');
+        const gameOverScreen = document.getElementById('gameOver');
+        const startScreen = document.getElementById('startScreen');
+        const startBtn = document.getElementById('startBtn');
+
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+                         ('ontouchstart' in window);
+
+        let highScore = parseInt(localStorage.getItem('pulseHighScore')) || 0;
+
+        let gameState = {
+            isPlaying: false,
+            score: 0,
+            circleY: canvas.height / 2,
+            baseRadius: 25,
+            currentRadius: 25,
+            targetRadius: 25,
+            isExpanding: true,
+            minRadius: 15,
+            maxRadius: 50,
+            pulseSpeed: 0.8,
+            isLocked: false,
+            walls: [],
+            wallSpeed: 3,
+            particles: [],
+            screenShake: 0
+        };
+
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContext();
+        let soundEnabled = true;
+
+        function playSound(freq, duration = 0.1, type = 'sine') {
+            if (!soundEnabled) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.frequency.value = freq;
+            osc.type = type;
+            gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+        }
+
+        function handleInput() {
+            if (!gameState.isPlaying && !gameOverScreen.classList.contains('hidden')) {
+                startGame();
+            } else if (!gameState.isPlaying && !startScreen.classList.contains('hidden')) {
+                startGame();
+            } else if (gameState.isPlaying && !gameState.isLocked) {
+                gameState.isLocked = true;
+                gameState.targetRadius = gameState.currentRadius;
+                playSound(800, 0.1);
+                createLockParticles();
+            }
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                handleInput();
+            }
+        });
+
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            handleInput();
+        }, { passive: false });
+
+        canvas.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (isMobile) handleInput();
+        });
+
+        startBtn.addEventListener('click', startGame);
+
+        function startGame() {
+            gameState = {
+                isPlaying: true,
+                score: 0,
+                circleY: canvas.height / 2,
+                baseRadius: 25,
+                currentRadius: 25,
+                targetRadius: 25,
+                isExpanding: true,
+                minRadius: 15,
+                maxRadius: 50,
+                pulseSpeed: 0.8,
+                isLocked: false,
+                walls: [],
+                wallSpeed: 3,
+                particles: [],
+                screenShake: 0,
+                time: 0
+            };
+            
+            startScreen.classList.add('hidden');
+            gameOverScreen.classList.add('hidden');
+            scoreElement.textContent = '0';
+            highScoreDisplay.textContent = highScore;
+            
+            // Spawn first walls
+            spawnWall();
+            
+            gameLoop();
+        }
+
+        function createLockParticles() {
+            for (let i = 0; i < 16; i++) {
+                const angle = (Math.PI * 2 * i) / 16;
+                gameState.particles.push({
+                    x: canvas.width / 2,
+                    y: gameState.circleY,
+                    vx: Math.cos(angle) * 4,
+                    vy: Math.sin(angle) * 4,
+                    life: 1,
+                    color: '#ffff00'
+                });
+            }
+        }
+
+        function createExplosion(x, y) {
+            for (let i = 0; i < 30; i++) {
+                const angle = (Math.PI * 2 * i) / 30;
+                gameState.particles.push({
+                    x: x,
+                    y: y,
+                    vx: Math.cos(angle) * (5 + Math.random() * 5),
+                    vy: Math.sin(angle) * (5 + Math.random() * 5),
+                    life: 1,
+                    color: ['#ff0055', '#ff00ff', '#ffff00'][Math.floor(Math.random() * 3)]
+                });
+            }
+        }
+
+        function spawnWall() {
+            const gapSize = 80 + Math.random() * 40; // Random gap size
+            const gapPosition = 150 + Math.random() * 100; // Random gap position
+            
+            gameState.walls.push({
+                x: canvas.width + 50,
+                y: 0,
+                gapY: gapPosition,
+                gapSize: gapSize,
+                passed: false
+            });
+        }
+
+        function updateGame() {
+            gameState.time += 0.016;
+            
+            // Pulse the circle size if not locked
+            if (!gameState.isLocked) {
+                if (gameState.isExpanding) {
+                    gameState.currentRadius += gameState.pulseSpeed;
+                    if (gameState.currentRadius >= gameState.maxRadius) {
+                        gameState.isExpanding = false;
+                        playSound(400, 0.05);
+                    }
+                } else {
+                    gameState.currentRadius -= gameState.pulseSpeed;
+                    if (gameState.currentRadius <= gameState.minRadius) {
+                        gameState.isExpanding = true;
+                        playSound(300, 0.05);
+                    }
+                }
+            }
+            
+            // Update particles
+            for (let i = gameState.particles.length - 1; i >= 0; i--) {
+                const p = gameState.particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.life -= 0.02;
+                p.vx *= 0.97;
+                p.vy *= 0.97;
+                
+                if (p.life <= 0) gameState.particles.splice(i, 1);
+            }
+            
+            // Update walls
+            for (let i = gameState.walls.length - 1; i >= 0; i--) {
+                const wall = gameState.walls[i];
+                wall.x -= gameState.wallSpeed;
+                
+                // Check collision
+                if (wall.x < canvas.width / 2 + gameState.currentRadius && 
+                    wall.x > canvas.width / 2 - gameState.currentRadius) {
+                    
+                    const circleTop = gameState.circleY - gameState.currentRadius;
+                    const circleBottom = gameState.circleY + gameState.currentRadius;
+                    const gapTop = wall.gapY;
+                    const gapBottom = wall.gapY + wall.gapSize;
+                    
+                    if (circleTop < gapTop || circleBottom > gapBottom) {
+                        createExplosion(canvas.width / 2, gameState.circleY);
+                        gameState.screenShake = 30;
+                        playSound(100, 0.5);
+                        endGame();
+                        return;
+                    }
+                }
+                
+                // Score when passed
+                if (!wall.passed && wall.x < canvas.width / 2 - gameState.currentRadius) {
+                    wall.passed = true;
+                    gameState.score += 10;
+                    scoreElement.textContent = gameState.score;
+                    playSound(600, 0.2);
+                    gameState.isLocked = false; // Unlock after passing
+                    
+                    // Increase difficulty
+                    if (gameState.score % 50 === 0) {
+                        gameState.wallSpeed += 0.3;
+                        gameState.pulseSpeed += 0.1;
+                    }
+                }
+                
+                // Remove off-screen walls
+                if (wall.x < -50) {
+                    gameState.walls.splice(i, 1);
+                }
+            }
+            
+            // Spawn new walls
+            if (gameState.walls.length === 0 || gameState.walls[gameState.walls.length - 1].x < canvas.width - 200) {
+                spawnWall();
+            }
+            
+            if (gameState.screenShake > 0) {
+                gameState.screenShake *= 0.85;
+            }
+        }
+
+        function drawGame() {
+            ctx.save();
+            
+            if (gameState.screenShake > 0) {
+                ctx.translate(
+                    (Math.random() - 0.5) * gameState.screenShake,
+                    (Math.random() - 0.5) * gameState.screenShake
+                );
+            }
+            
+            // Background
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Pulsing background circles
+            ctx.strokeStyle = 'rgba(0, 255, 136, 0.1)';
+            ctx.lineWidth = 2;
+            for (let i = 1; i <= 3; i++) {
+                ctx.beginPath();
+                ctx.arc(canvas.width / 2, gameState.circleY, gameState.currentRadius * i, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+            
+            // Particles
+            gameState.particles.forEach(p => {
+                ctx.save();
+                ctx.globalAlpha = p.life;
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = p.color;
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            });
+            
+            // Draw walls
+            gameState.walls.forEach(wall => {
+                ctx.shadowBlur = 30;
+                ctx.shadowColor = '#00ff88';
+                ctx.fillStyle = '#00ff88';
+                
+                // Top section
+                ctx.fillRect(wall.x - 25, 0, 50, wall.gapY);
+                
+                // Bottom section
+                ctx.fillRect(wall.x - 25, wall.gapY + wall.gapSize, 50, canvas.height - (wall.gapY + wall.gapSize));
+                
+                // Gap indicators
+                ctx.shadowBlur = 20;
+                ctx.fillStyle = '#ffff00';
+                ctx.fillRect(wall.x - 30, wall.gapY - 3, 60, 3);
+                ctx.fillRect(wall.x - 30, wall.gapY + wall.gapSize, 60, 3);
+                
+                ctx.shadowBlur = 0;
+            });
+            
+            // Draw player circle
+            const gradient = ctx.createRadialGradient(canvas.width / 2, gameState.circleY, 0,
+                                                      canvas.width / 2, gameState.circleY, gameState.currentRadius);
+            gradient.addColorStop(0, '#ffffff');
+            gradient.addColorStop(0.4, '#00ff88');
+            gradient.addColorStop(0.8, '#ffff00');
+            gradient.addColorStop(1, gameState.isLocked ? '#ff0055' : '#00ff88');
+            
+            ctx.shadowBlur = gameState.isLocked ? 60 : 40;
+            ctx.shadowColor = gameState.isLocked ? '#ff0055' : '#00ff88';
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(canvas.width / 2, gameState.circleY, gameState.currentRadius, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Size indicator
+            if (!gameState.isLocked) {
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(canvas.width / 2, gameState.circleY, gameState.currentRadius, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+            
+            // Locked indicator
+            if (gameState.isLocked) {
+                ctx.fillStyle = '#fff';
+                ctx.font = 'bold 20px Orbitron';
+                ctx.textAlign = 'center';
+                ctx.fillText('🔒', canvas.width / 2, gameState.circleY + 6);
+            }
+            
+            ctx.restore();
+        }
+
+        function endGame() {
+            gameState.isPlaying = false;
+            finalScoreElement.textContent = gameState.score;
+            
+            if (gameState.score > highScore) {
+                highScore = gameState.score;
+                localStorage.setItem('pulseHighScore', highScore);
+            }
+            highScoreDisplay.textContent = highScore;
+            
+            setTimeout(() => {
+                gameOverScreen.classList.remove('hidden');
+            }, 200);
+        }
+
+        function gameLoop() {
+            if (!gameState.isPlaying) return;
+            
+            updateGame();
+            drawGame();
+            
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Initialize
+        highScoreDisplay.textContent = highScore;
+        drawGame();
+    </script>
+</body>
+</html>

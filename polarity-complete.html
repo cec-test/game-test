@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Polarity - Magnet Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #fff;
+        }
+
+        .container {
+            text-align: center;
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: 3em;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            letter-spacing: 8px;
+        }
+
+        .game-wrapper {
+            position: relative;
+            display: inline-block;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        #gameCanvas {
+            display: block;
+            background: #1a1a2e;
+            border: 4px solid #fff;
+        }
+
+        .info {
+            margin-top: 20px;
+            font-size: 1.2em;
+        }
+
+        .score {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .instructions {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .game-over, .start-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .game-over h2, .start-screen h2 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            color: #ff6b6b;
+        }
+
+        .start-screen h2 {
+            color: #4ecdc4;
+        }
+
+        .game-over p, .start-screen p {
+            font-size: 1.3em;
+            margin-bottom: 10px;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 15px 40px;
+            font-size: 1.2em;
+            font-weight: bold;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        #finalScore {
+            color: #4ecdc4;
+            font-size: 1.5em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>POLARITY</h1>
+        <div class="game-wrapper">
+            <canvas id="gameCanvas" width="400" height="600"></canvas>
+            <div id="gameOver" class="game-over hidden">
+                <h2>Game Over!</h2>
+                <p>Score: <span id="finalScore">0</span></p>
+                <button id="restartBtn">Play Again</button>
+            </div>
+            <div id="startScreen" class="start-screen">
+                <h2>Welcome to Polarity!</h2>
+                <p>Press SPACEBAR to switch sides</p>
+                <p>Avoid the obstacles!</p>
+                <button id="startBtn">Start Game</button>
+            </div>
+        </div>
+        <div class="info">
+            <div class="score">Score: <span id="score">0</span></div>
+            <div class="instructions">Press SPACEBAR to switch walls</div>
+        </div>
+    </div>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreElement = document.getElementById('score');
+        const finalScoreElement = document.getElementById('finalScore');
+        const gameOverScreen = document.getElementById('gameOver');
+        const startScreen = document.getElementById('startScreen');
+        const restartBtn = document.getElementById('restartBtn');
+        const startBtn = document.getElementById('startBtn');
+
+        // Game constants
+        const WALL_WIDTH = 40;
+        const MAGNET_SIZE = 30;
+        const OBSTACLE_WIDTH = 30;
+        const OBSTACLE_HEIGHT = 40;
+        const INITIAL_OBSTACLE_SPEED = 2;
+        const INITIAL_SPAWN_RATE = 100;
+
+        // Game state
+        let gameState = {
+            isPlaying: false,
+            score: 0,
+            magnetSide: 'left',
+            magnetY: canvas.height / 2,
+            magnetTargetX: WALL_WIDTH / 2,
+            magnetX: WALL_WIDTH / 2,
+            isTransitioning: false,
+            transitionSpeed: 8,
+            obstacles: [],
+            obstacleSpeed: INITIAL_OBSTACLE_SPEED,
+            spawnCounter: 0,
+            spawnRate: INITIAL_SPAWN_RATE,
+            difficulty: 1
+        };
+
+        // Event listeners
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                if (gameState.isPlaying && !gameState.isTransitioning) {
+                    switchSides();
+                }
+            }
+        });
+
+        startBtn.addEventListener('click', startGame);
+        restartBtn.addEventListener('click', startGame);
+
+        function startGame() {
+            gameState = {
+                isPlaying: true,
+                score: 0,
+                magnetSide: 'left',
+                magnetY: canvas.height / 2,
+                magnetTargetX: WALL_WIDTH / 2,
+                magnetX: WALL_WIDTH / 2,
+                isTransitioning: false,
+                transitionSpeed: 8,
+                obstacles: [],
+                obstacleSpeed: INITIAL_OBSTACLE_SPEED,
+                spawnCounter: 0,
+                spawnRate: INITIAL_SPAWN_RATE,
+                difficulty: 1
+            };
+            
+            startScreen.classList.add('hidden');
+            gameOverScreen.classList.add('hidden');
+            scoreElement.textContent = '0';
+            
+            gameLoop();
+        }
+
+        function switchSides() {
+            if (gameState.isTransitioning) return;
+            
+            gameState.isTransitioning = true;
+            gameState.magnetSide = gameState.magnetSide === 'left' ? 'right' : 'left';
+            
+            if (gameState.magnetSide === 'left') {
+                gameState.magnetTargetX = WALL_WIDTH / 2;
+            } else {
+                gameState.magnetTargetX = canvas.width - WALL_WIDTH / 2;
+            }
+        }
+
+        function spawnObstacle() {
+            const side = Math.random() < 0.5 ? 'left' : 'right';
+            const x = side === 'left' ? WALL_WIDTH / 2 : canvas.width - WALL_WIDTH / 2;
+            
+            gameState.obstacles.push({
+                x: x,
+                y: -OBSTACLE_HEIGHT,
+                side: side,
+                width: OBSTACLE_WIDTH,
+                height: OBSTACLE_HEIGHT
+            });
+        }
+
+        function updateGame() {
+            if (gameState.isTransitioning) {
+                const dx = gameState.magnetTargetX - gameState.magnetX;
+                if (Math.abs(dx) > 1) {
+                    gameState.magnetX += dx * 0.15;
+                } else {
+                    gameState.magnetX = gameState.magnetTargetX;
+                    gameState.isTransitioning = false;
+                }
+            }
+            
+            gameState.spawnCounter++;
+            if (gameState.spawnCounter >= gameState.spawnRate) {
+                spawnObstacle();
+                gameState.spawnCounter = 0;
+            }
+            
+            for (let i = gameState.obstacles.length - 1; i >= 0; i--) {
+                const obstacle = gameState.obstacles[i];
+                obstacle.y += gameState.obstacleSpeed;
+                
+                if (checkCollision(obstacle)) {
+                    endGame();
+                    return;
+                }
+                
+                if (obstacle.y > canvas.height) {
+                    gameState.obstacles.splice(i, 1);
+                    gameState.score += 10;
+                    scoreElement.textContent = gameState.score;
+                    
+                    if (gameState.score % 100 === 0) {
+                        gameState.difficulty += 0.1;
+                        gameState.obstacleSpeed = INITIAL_OBSTACLE_SPEED + gameState.difficulty * 0.5;
+                        gameState.spawnRate = Math.max(40, INITIAL_SPAWN_RATE - gameState.difficulty * 5);
+                    }
+                }
+            }
+        }
+
+        function checkCollision(obstacle) {
+            const magnetRadius = MAGNET_SIZE / 2;
+            const distX = Math.abs(obstacle.x - gameState.magnetX);
+            const distY = Math.abs(obstacle.y + obstacle.height / 2 - gameState.magnetY);
+            
+            if (distX > (obstacle.width / 2 + magnetRadius) || 
+                distY > (obstacle.height / 2 + magnetRadius)) {
+                return false;
+            }
+            
+            if (distX <= obstacle.width / 2 || distY <= obstacle.height / 2) {
+                return true;
+            }
+            
+            const cornerDistSq = Math.pow(distX - obstacle.width / 2, 2) + 
+                                 Math.pow(distY - obstacle.height / 2, 2);
+            
+            return cornerDistSq <= Math.pow(magnetRadius, 2);
+        }
+
+        function drawGame() {
+            ctx.fillStyle = '#1a1a2e';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.fillStyle = '#2d2d44';
+            ctx.fillRect(0, 0, WALL_WIDTH, canvas.height);
+            ctx.fillRect(canvas.width - WALL_WIDTH, 0, WALL_WIDTH, canvas.height);
+            
+            ctx.fillStyle = '#ff6b6b';
+            gameState.obstacles.forEach(obstacle => {
+                ctx.fillRect(
+                    obstacle.x - obstacle.width / 2,
+                    obstacle.y,
+                    obstacle.width,
+                    obstacle.height
+                );
+                
+                ctx.fillStyle = '#ff8787';
+                ctx.fillRect(
+                    obstacle.x - obstacle.width / 2 + 5,
+                    obstacle.y + 5,
+                    obstacle.width - 10,
+                    5
+                );
+                ctx.fillStyle = '#ff6b6b';
+            });
+            
+            drawMagnet(gameState.magnetX, gameState.magnetY);
+        }
+
+        function drawMagnet(x, y) {
+            const size = MAGNET_SIZE;
+            
+            ctx.fillStyle = '#c0c0c0';
+            ctx.strokeStyle = '#808080';
+            ctx.lineWidth = 2;
+            
+            ctx.fillStyle = '#ff4444';
+            ctx.fillRect(x - size/2, y - size/2, size/3, size);
+            ctx.strokeRect(x - size/2, y - size/2, size/3, size);
+            
+            ctx.fillStyle = '#4444ff';
+            ctx.fillRect(x + size/6, y - size/2, size/3, size);
+            ctx.strokeRect(x + size/6, y - size/2, size/3, size);
+            
+            ctx.fillStyle = '#c0c0c0';
+            ctx.fillRect(x - size/2, y + size/3, size/2, size/6);
+            ctx.strokeRect(x - size/2, y + size/3, size/2, size/6);
+            
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 10px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('N', x - size/3, y);
+            ctx.fillText('S', x + size/3, y);
+        }
+
+        function endGame() {
+            gameState.isPlaying = false;
+            finalScoreElement.textContent = gameState.score;
+            gameOverScreen.classList.remove('hidden');
+        }
+
+        function gameLoop() {
+            if (!gameState.isPlaying) return;
+            
+            updateGame();
+            drawGame();
+            
+            requestAnimationFrame(gameLoop);
+        }
+
+        drawGame();
+    </script>
+</body>
+</html>

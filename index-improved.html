@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Polarity - Magnet Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #fff;
+        }
+
+        .container {
+            text-align: center;
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: 3em;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            letter-spacing: 8px;
+        }
+
+        .game-wrapper {
+            position: relative;
+            display: inline-block;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        #gameCanvas {
+            display: block;
+            background: #1a1a2e;
+            border: 4px solid #fff;
+        }
+
+        .info {
+            margin-top: 20px;
+            font-size: 1.2em;
+        }
+
+        .score {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .instructions {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .game-over, .start-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .game-over h2, .start-screen h2 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            color: #ff6b6b;
+        }
+
+        .start-screen h2 {
+            color: #4ecdc4;
+        }
+
+        .game-over p, .start-screen p {
+            font-size: 1.3em;
+            margin-bottom: 10px;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 15px 40px;
+            font-size: 1.2em;
+            font-weight: bold;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        #finalScore {
+            color: #4ecdc4;
+            font-size: 1.5em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>POLARITY</h1>
+        <div class="game-wrapper">
+            <canvas id="gameCanvas" width="400" height="600"></canvas>
+            <div id="gameOver" class="game-over hidden">
+                <h2>Game Over!</h2>
+                <p>Score: <span id="finalScore">0</span></p>
+                <button id="restartBtn">Play Again</button>
+            </div>
+            <div id="startScreen" class="start-screen">
+                <h2>Welcome to Polarity!</h2>
+                <p>Press SPACEBAR to switch sides</p>
+                <p>Avoid the obstacles!</p>
+                <button id="startBtn">Start Game</button>
+            </div>
+        </div>
+        <div class="info">
+            <div class="score">Score: <span id="score">0</span></div>
+            <div class="instructions">Press SPACEBAR to switch walls (can switch mid-flight!)</div>
+        </div>
+    </div>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreElement = document.getElementById('score');
+        const finalScoreElement = document.getElementById('finalScore');
+        const gameOverScreen = document.getElementById('gameOver');
+        const startScreen = document.getElementById('startScreen');
+        const restartBtn = document.getElementById('restartBtn');
+        const startBtn = document.getElementById('startBtn');
+
+        // Game constants
+        const WALL_WIDTH = 50;
+        const MAGNET_SIZE = 35;
+        const INITIAL_OBSTACLE_SPEED = 2;
+        const INITIAL_SPAWN_RATE = 100;
+
+        // Obstacle types
+        const OBSTACLE_TYPES = [
+            { name: 'beaker', minWidth: 25, maxWidth: 45, minHeight: 40, maxHeight: 70 },
+            { name: 'flask', minWidth: 30, maxWidth: 50, minHeight: 45, maxHeight: 65 },
+            { name: 'tube', minWidth: 15, maxWidth: 25, minHeight: 50, maxHeight: 80 },
+            { name: 'bottle', minWidth: 20, maxWidth: 35, minHeight: 55, maxHeight: 75 }
+        ];
+
+        // Game state
+        let gameState = {
+            isPlaying: false,
+            score: 0,
+            magnetSide: 'left',
+            magnetY: canvas.height / 2,
+            magnetX: WALL_WIDTH / 2,
+            magnetRotation: 0, // Rotation angle in radians
+            targetRotation: 0,
+            isTransitioning: false,
+            obstacles: [],
+            obstacleSpeed: INITIAL_OBSTACLE_SPEED,
+            spawnCounter: 0,
+            spawnRate: INITIAL_SPAWN_RATE,
+            difficulty: 1
+        };
+
+        // Event listeners
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                if (gameState.isPlaying) {
+                    switchSides();
+                }
+            }
+        });
+
+        startBtn.addEventListener('click', startGame);
+        restartBtn.addEventListener('click', startGame);
+
+        function startGame() {
+            gameState = {
+                isPlaying: true,
+                score: 0,
+                magnetSide: 'left',
+                magnetY: canvas.height / 2,
+                magnetX: WALL_WIDTH / 2,
+                magnetRotation: 0,
+                targetRotation: 0,
+                isTransitioning: false,
+                obstacles: [],
+                obstacleSpeed: INITIAL_OBSTACLE_SPEED,
+                spawnCounter: 0,
+                spawnRate: INITIAL_SPAWN_RATE,
+                difficulty: 1
+            };
+            
+            startScreen.classList.add('hidden');
+            gameOverScreen.classList.add('hidden');
+            scoreElement.textContent = '0';
+            
+            gameLoop();
+        }
+
+        function switchSides() {
+            // Can switch at any time!
+            gameState.isTransitioning = true;
+            gameState.magnetSide = gameState.magnetSide === 'left' ? 'right' : 'left';
+            
+            // Update target rotation for spinning effect
+            if (gameState.magnetSide === 'left') {
+                gameState.targetRotation = 0; // Prongs face left
+            } else {
+                gameState.targetRotation = Math.PI; // Prongs face right (180 degrees)
+            }
+        }
+
+        function spawnObstacle() {
+            const side = Math.random() < 0.5 ? 'left' : 'right';
+            const type = OBSTACLE_TYPES[Math.floor(Math.random() * OBSTACLE_TYPES.length)];
+            
+            // Random size within type's range
+            const width = type.minWidth + Math.random() * (type.maxWidth - type.minWidth);
+            const height = type.minHeight + Math.random() * (type.maxHeight - type.minHeight);
+            
+            // Random extension from wall (how far it sticks out)
+            const extension = 30 + Math.random() * 80; // 30-110 pixels into the middle
+            
+            let x;
+            if (side === 'left') {
+                x = WALL_WIDTH + extension / 2;
+            } else {
+                x = canvas.width - WALL_WIDTH - extension / 2;
+            }
+            
+            gameState.obstacles.push({
+                x: x,
+                y: -height,
+                side: side,
+                width: extension,
+                height: height,
+                type: type.name
+            });
+        }
+
+        function updateGame() {
+            // Update magnet position during transition
+            if (gameState.isTransitioning) {
+                let targetX;
+                if (gameState.magnetSide === 'left') {
+                    targetX = WALL_WIDTH / 2;
+                } else {
+                    targetX = canvas.width - WALL_WIDTH / 2;
+                }
+                
+                const dx = targetX - gameState.magnetX;
+                if (Math.abs(dx) > 2) {
+                    gameState.magnetX += dx * 0.2; // Fast movement
+                } else {
+                    gameState.magnetX = targetX;
+                    gameState.isTransitioning = false;
+                }
+            }
+            
+            // Smooth rotation animation
+            const rotDiff = gameState.targetRotation - gameState.magnetRotation;
+            if (Math.abs(rotDiff) > 0.1) {
+                gameState.magnetRotation += rotDiff * 0.15;
+            } else {
+                gameState.magnetRotation = gameState.targetRotation;
+            }
+            
+            // Spawn obstacles
+            gameState.spawnCounter++;
+            if (gameState.spawnCounter >= gameState.spawnRate) {
+                spawnObstacle();
+                gameState.spawnCounter = 0;
+            }
+            
+            // Update obstacles
+            for (let i = gameState.obstacles.length - 1; i >= 0; i--) {
+                const obstacle = gameState.obstacles[i];
+                obstacle.y += gameState.obstacleSpeed;
+                
+                // Check collision with magnet
+                if (checkCollision(obstacle)) {
+                    endGame();
+                    return;
+                }
+                
+                // Remove obstacles that are off screen and award points
+                if (obstacle.y > canvas.height) {
+                    gameState.obstacles.splice(i, 1);
+                    gameState.score += 10;
+                    scoreElement.textContent = gameState.score;
+                    
+                    // Increase difficulty
+                    if (gameState.score % 100 === 0) {
+                        gameState.difficulty += 0.1;
+                        gameState.obstacleSpeed = INITIAL_OBSTACLE_SPEED + gameState.difficulty * 0.5;
+                        gameState.spawnRate = Math.max(40, INITIAL_SPAWN_RATE - gameState.difficulty * 5);
+                    }
+                }
+            }
+        }
+
+        function checkCollision(obstacle) {
+            const magnetRadius = MAGNET_SIZE / 2;
+            const distX = Math.abs(obstacle.x - gameState.magnetX);
+            const distY = Math.abs(obstacle.y + obstacle.height / 2 - gameState.magnetY);
+            
+            if (distX > (obstacle.width / 2 + magnetRadius) || 
+                distY > (obstacle.height / 2 + magnetRadius)) {
+                return false;
+            }
+            
+            if (distX <= obstacle.width / 2 || distY <= obstacle.height / 2) {
+                return true;
+            }
+            
+            const cornerDistSq = Math.pow(distX - obstacle.width / 2, 2) + 
+                                 Math.pow(distY - obstacle.height / 2, 2);
+            
+            return cornerDistSq <= Math.pow(magnetRadius, 2);
+        }
+
+        function drawGame() {
+            // Clear canvas
+            ctx.fillStyle = '#1a1a2e';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw walls with gradient
+            const wallGradient = ctx.createLinearGradient(0, 0, WALL_WIDTH, 0);
+            wallGradient.addColorStop(0, '#2d2d44');
+            wallGradient.addColorStop(1, '#3a3a55');
+            
+            ctx.fillStyle = wallGradient;
+            ctx.fillRect(0, 0, WALL_WIDTH, canvas.height);
+            ctx.fillRect(canvas.width - WALL_WIDTH, 0, WALL_WIDTH, canvas.height);
+            
+            // Draw obstacles
+            gameState.obstacles.forEach(obstacle => {
+                drawObstacle(obstacle);
+            });
+            
+            // Draw magnet
+            drawMagnet(gameState.magnetX, gameState.magnetY, gameState.magnetRotation);
+        }
+
+        function drawObstacle(obstacle) {
+            ctx.save();
+            
+            const x = obstacle.x - obstacle.width / 2;
+            const y = obstacle.y;
+            const w = obstacle.width;
+            const h = obstacle.height;
+            
+            switch(obstacle.type) {
+                case 'beaker':
+                    // Beaker shape
+                    ctx.fillStyle = '#4ecdc4';
+                    ctx.strokeStyle = '#3ba89f';
+                    ctx.lineWidth = 2;
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(x + w * 0.2, y);
+                    ctx.lineTo(x + w * 0.2, y + h * 0.2);
+                    ctx.lineTo(x, y + h * 0.3);
+                    ctx.lineTo(x, y + h * 0.9);
+                    ctx.quadraticCurveTo(x, y + h, x + w * 0.1, y + h);
+                    ctx.lineTo(x + w * 0.9, y + h);
+                    ctx.quadraticCurveTo(x + w, y + h, x + w, y + h * 0.9);
+                    ctx.lineTo(x + w, y + h * 0.3);
+                    ctx.lineTo(x + w * 0.8, y + h * 0.2);
+                    ctx.lineTo(x + w * 0.8, y);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.stroke();
+                    
+                    // Liquid
+                    ctx.fillStyle = 'rgba(255, 107, 107, 0.6)';
+                    ctx.fillRect(x + w * 0.1, y + h * 0.5, w * 0.8, h * 0.4);
+                    break;
+                    
+                case 'flask':
+                    // Erlenmeyer flask
+                    ctx.fillStyle = '#95e1d3';
+                    ctx.strokeStyle = '#6fbfaf';
+                    ctx.lineWidth = 2;
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(x + w * 0.35, y);
+                    ctx.lineTo(x + w * 0.35, y + h * 0.3);
+                    ctx.lineTo(x, y + h * 0.9);
+                    ctx.quadraticCurveTo(x, y + h, x + w * 0.1, y + h);
+                    ctx.lineTo(x + w * 0.9, y + h);
+                    ctx.quadraticCurveTo(x + w, y + h, x + w, y + h * 0.9);
+                    ctx.lineTo(x + w * 0.65, y + h * 0.3);
+                    ctx.lineTo(x + w * 0.65, y);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.stroke();
+                    
+                    // Liquid
+                    ctx.fillStyle = 'rgba(255, 195, 0, 0.6)';
+                    ctx.beginPath();
+                    ctx.moveTo(x + w * 0.15, y + h * 0.7);
+                    ctx.lineTo(x + w * 0.1, y + h * 0.95);
+                    ctx.lineTo(x + w * 0.9, y + h * 0.95);
+                    ctx.lineTo(x + w * 0.85, y + h * 0.7);
+                    ctx.closePath();
+                    ctx.fill();
+                    break;
+                    
+                case 'tube':
+                    // Test tube
+                    ctx.fillStyle = '#a8e6cf';
+                    ctx.strokeStyle = '#7fbf9f';
+                    ctx.lineWidth = 2;
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(x + w * 0.2, y);
+                    ctx.lineTo(x + w * 0.2, y + h * 0.85);
+                    ctx.quadraticCurveTo(x + w * 0.2, y + h, x + w * 0.5, y + h);
+                    ctx.quadraticCurveTo(x + w * 0.8, y + h, x + w * 0.8, y + h * 0.85);
+                    ctx.lineTo(x + w * 0.8, y);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.stroke();
+                    
+                    // Liquid
+                    ctx.fillStyle = 'rgba(147, 51, 234, 0.6)';
+                    ctx.fillRect(x + w * 0.25, y + h * 0.4, w * 0.5, h * 0.4);
+                    break;
+                    
+                case 'bottle':
+                    // Laboratory bottle
+                    ctx.fillStyle = '#ffd89b';
+                    ctx.strokeStyle = '#e6b87d';
+                    ctx.lineWidth = 2;
+                    
+                    // Body
+                    ctx.fillRect(x + w * 0.15, y + h * 0.25, w * 0.7, h * 0.7);
+                    ctx.strokeRect(x + w * 0.15, y + h * 0.25, w * 0.7, h * 0.7);
+                    
+                    // Neck
+                    ctx.fillRect(x + w * 0.35, y, w * 0.3, h * 0.3);
+                    ctx.strokeRect(x + w * 0.35, y, w * 0.3, h * 0.3);
+                    
+                    // Bottom curve
+                    ctx.beginPath();
+                    ctx.arc(x + w * 0.5, y + h * 0.95, w * 0.35, 0, Math.PI);
+                    ctx.fill();
+                    ctx.stroke();
+                    
+                    // Liquid
+                    ctx.fillStyle = 'rgba(52, 211, 153, 0.6)';
+                    ctx.fillRect(x + w * 0.2, y + h * 0.6, w * 0.6, h * 0.3);
+                    break;
+            }
+            
+            ctx.restore();
+        }
+
+        function drawMagnet(x, y, rotation) {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(rotation);
+            
+            const size = MAGNET_SIZE;
+            
+            // Draw horseshoe magnet with prongs pointing left (will rotate)
+            ctx.strokeStyle = '#505050';
+            ctx.lineWidth = 3;
+            
+            // Red pole (North) - top prong
+            ctx.fillStyle = '#ff3333';
+            ctx.beginPath();
+            ctx.rect(-size/2, -size/2.5, size/4, size * 0.7);
+            ctx.fill();
+            ctx.stroke();
+            
+            // Label N
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 12px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('N', -size/2 + size/8, -size/8);
+            
+            // Blue pole (South) - bottom prong
+            ctx.fillStyle = '#3333ff';
+            ctx.beginPath();
+            ctx.rect(-size/2, -size/2.5 + size * 0.3, size/4, size * 0.7);
+            ctx.fill();
+            ctx.stroke();
+            
+            // Label S
+            ctx.fillStyle = '#ffffff';
+            ctx.fillText('S', -size/2 + size/8, size/3);
+            
+            // Connecting curve (the back of the horseshoe)
+            ctx.fillStyle = '#c0c0c0';
+            ctx.strokeStyle = '#808080';
+            ctx.lineWidth = 2;
+            
+            ctx.beginPath();
+            ctx.arc(0, 0, size/2.5, -Math.PI/2 - 0.8, -Math.PI/2 + 0.8);
+            ctx.lineWidth = size/5;
+            ctx.stroke();
+            
+            ctx.restore();
+        }
+
+        function endGame() {
+            gameState.isPlaying = false;
+            finalScoreElement.textContent = gameState.score;
+            gameOverScreen.classList.remove('hidden');
+        }
+
+        function gameLoop() {
+            if (!gameState.isPlaying) return;
+            
+            updateGame();
+            drawGame();
+            
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Draw initial state
+        drawGame();
+    </script>
+</body>
+</html>
