@@ -81,10 +81,10 @@
 
         .games-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
             gap: 40px;
             margin: 0 auto;
-            max-width: 900px;
+            max-width: 1200px;
         }
 
         .game-card {
@@ -131,6 +131,12 @@
             --card-color1: #00ff88;
             --card-color2: #ffff00;
             --card-rgb: 0, 255, 136;
+        }
+
+        .game-card.velocity {
+            --card-color1: #ff0055;
+            --card-color2: #ff3366;
+            --card-rgb: 255, 0, 85;
         }
 
         .game-icon {
@@ -286,6 +292,17 @@
                     Time your size perfectly to fit through gaps.
                 </div>
                 <a href="pulse.html" class="play-btn">▶ PLAY</a>
+            </div>
+
+            <!-- Velocity Card -->
+            <div class="game-card velocity" onclick="window.location.href='velocity.html'">
+                <div class="game-icon">🔺</div>
+                <div class="game-title">VELOCITY</div>
+                <div class="game-desc">
+                    Time slows when you stand still.
+                    Dodge bullets in slow motion.
+                </div>
+                <a href="velocity.html" class="play-btn">▶ PLAY</a>
             </div>
         </div>
     </div>
