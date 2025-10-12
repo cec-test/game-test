@@ -153,7 +153,7 @@
         </div>
         <div class="info">
             <div class="score">Score: <span id="score">0</span></div>
-            <div class="instructions">Press SPACEBAR to switch walls (can switch mid-flight!)</div>
+            <div class="instructions">Press SPACEBAR to switch walls</div>
         </div>
     </div>
     <script>
@@ -168,20 +168,20 @@
 
         // Game constants
         const WALL_WIDTH = 3;
-        const MAGNET_SIZE = 42;
+        const MAGNET_WIDTH = 38;
+        const MAGNET_HEIGHT = 32;
         const INITIAL_OBSTACLE_SPEED = 2.5;
         const INITIAL_SPAWN_RATE = 90;
 
-        // Obstacle types
+        // Obstacle types - emoji inspired!
         const OBSTACLE_TYPES = [
-            { name: 'beaker', minWidth: 30, maxWidth: 50, minHeight: 45, maxHeight: 75 },
-            { name: 'flask', minWidth: 35, maxWidth: 55, minHeight: 50, maxHeight: 70 },
-            { name: 'screw', minWidth: 15, maxWidth: 20, minHeight: 60, maxHeight: 90 },
-            { name: 'bolt', minWidth: 20, maxWidth: 30, minHeight: 50, maxHeight: 80 },
-            { name: 'gear', minWidth: 40, maxWidth: 60, minHeight: 40, maxHeight: 60 },
-            { name: 'wrench', minWidth: 25, maxWidth: 35, minHeight: 70, maxHeight: 100 },
-            { name: 'nail', minWidth: 10, maxWidth: 15, minHeight: 60, maxHeight: 95 },
-            { name: 'spring', minWidth: 25, maxWidth: 40, minHeight: 50, maxHeight: 80 }
+            { name: 'bolt', minWidth: 20, maxWidth: 30, minHeight: 55, maxHeight: 85 }, // 🔩
+            { name: 'wrench', minWidth: 25, maxWidth: 35, minHeight: 70, maxHeight: 95 }, // 🔧
+            { name: 'gear', minWidth: 40, maxWidth: 65, minHeight: 40, maxHeight: 65 }, // ⚙️
+            { name: 'hammer', minWidth: 30, maxWidth: 45, minHeight: 65, maxHeight: 90 }, // 🔨
+            { name: 'lightning', minWidth: 20, maxWidth: 30, minHeight: 60, maxHeight: 90 }, // ⚡
+            { name: 'diamond', minWidth: 35, maxWidth: 50, minHeight: 35, maxHeight: 50 }, // 💎
+            { name: 'flask', minWidth: 30, maxWidth: 45, minHeight: 50, maxHeight: 75 } // 🧪
         ];
 
         // Game state
@@ -253,14 +253,14 @@
         }
 
         function createSwitchParticles() {
-            for (let i = 0; i < 8; i++) {
+            for (let i = 0; i < 12; i++) {
                 gameState.particles.push({
                     x: gameState.magnetX,
                     y: gameState.magnetY,
-                    vx: (Math.random() - 0.5) * 6,
-                    vy: (Math.random() - 0.5) * 6,
+                    vx: (Math.random() - 0.5) * 8,
+                    vy: (Math.random() - 0.5) * 8,
                     life: 1,
-                    color: gameState.magnetSide === 'left' ? '#4ecdc4' : '#ff6b6b'
+                    color: '#ffdd00'
                 });
             }
         }
@@ -270,8 +270,7 @@
                 const p = gameState.particles[i];
                 p.x += p.vx;
                 p.y += p.vy;
-                p.life -= 0.02;
-                p.vy += 0.1; // gravity
+                p.life -= 0.025;
                 
                 if (p.life <= 0) {
                     gameState.particles.splice(i, 1);
@@ -284,10 +283,10 @@
                 ctx.save();
                 ctx.globalAlpha = p.life;
                 ctx.fillStyle = p.color;
-                ctx.shadowBlur = 10;
+                ctx.shadowBlur = 15;
                 ctx.shadowColor = p.color;
                 ctx.beginPath();
-                ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+                ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
                 ctx.fill();
                 ctx.restore();
             });
@@ -376,27 +375,36 @@
         }
 
         function checkCollision(obstacle) {
-            const magnetRadius = MAGNET_SIZE / 2;
-            const distX = Math.abs(obstacle.x - gameState.magnetX);
-            const distY = Math.abs(obstacle.y + obstacle.height / 2 - gameState.magnetY);
+            // Precise collision - magnet is a U-shape, obstacles are rectangles rotated
+            const magnetHalfWidth = MAGNET_WIDTH / 2;
+            const magnetHalfHeight = MAGNET_HEIGHT / 2;
             
-            if (distX > (obstacle.width / 2 + magnetRadius) || 
-                distY > (obstacle.height / 2 + magnetRadius)) {
-                return false;
+            // Get magnet bounds (the U-shaped area)
+            const magnetLeft = gameState.magnetX - magnetHalfWidth;
+            const magnetRight = gameState.magnetX + magnetHalfWidth;
+            const magnetTop = gameState.magnetY - magnetHalfHeight;
+            const magnetBottom = gameState.magnetY + magnetHalfHeight;
+            
+            // Obstacle is rotated 90 degrees, so width becomes height
+            const obsHalfWidth = obstacle.width / 2;
+            const obsHalfHeight = obstacle.height / 2;
+            
+            const obstacleLeft = obstacle.x - obsHalfWidth;
+            const obstacleRight = obstacle.x + obsHalfWidth;
+            const obstacleTop = obstacle.y;
+            const obstacleBottom = obstacle.y + obstacle.height;
+            
+            // Check if rectangles overlap
+            if (magnetRight < obstacleLeft || magnetLeft > obstacleRight ||
+                magnetBottom < obstacleTop || magnetTop > obstacleBottom) {
+                return false; // No collision
             }
             
-            if (distX <= obstacle.width / 2 || distY <= obstacle.height / 2) {
-                return true;
-            }
-            
-            const cornerDistSq = Math.pow(distX - obstacle.width / 2, 2) + 
-                                 Math.pow(distY - obstacle.height / 2, 2);
-            
-            return cornerDistSq <= Math.pow(magnetRadius, 2);
+            return true; // Collision!
         }
 
         function drawGame() {
-            // Background with gradient
+            // Background
             const bgGradient = ctx.createRadialGradient(canvas.width/2, canvas.height/2, 0, 
                                                         canvas.width/2, canvas.height/2, canvas.width);
             bgGradient.addColorStop(0, '#252545');
@@ -406,8 +414,8 @@
             
             // Glowing walls
             ctx.shadowBlur = 15;
-            ctx.shadowColor = '#4ecdc4';
-            ctx.fillStyle = '#4ecdc4';
+            ctx.shadowColor = '#00ffff';
+            ctx.fillStyle = '#00ffff';
             ctx.fillRect(0, 0, WALL_WIDTH, canvas.height);
             ctx.fillRect(canvas.width - WALL_WIDTH, 0, WALL_WIDTH, canvas.height);
             ctx.shadowBlur = 0;
@@ -436,146 +444,20 @@
             const x = -w / 2;
             const y = -h / 2;
             
-            // Add shadow to all obstacles
-            ctx.shadowBlur = 10;
+            ctx.shadowBlur = 8;
             ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
-            ctx.shadowOffsetX = 3;
-            ctx.shadowOffsetY = 3;
             
             switch(obstacle.type) {
-                case 'beaker':
-                    const beakerGrad = ctx.createLinearGradient(x, y, x + w, y + h);
-                    beakerGrad.addColorStop(0, '#5eddd6');
-                    beakerGrad.addColorStop(1, '#3ba89f');
-                    ctx.fillStyle = beakerGrad;
-                    ctx.strokeStyle = '#2a7f77';
-                    ctx.lineWidth = 2.5;
-                    
-                    ctx.beginPath();
-                    ctx.moveTo(x + w * 0.2, y);
-                    ctx.lineTo(x + w * 0.2, y + h * 0.2);
-                    ctx.lineTo(x, y + h * 0.3);
-                    ctx.lineTo(x, y + h * 0.9);
-                    ctx.quadraticCurveTo(x, y + h, x + w * 0.1, y + h);
-                    ctx.lineTo(x + w * 0.9, y + h);
-                    ctx.quadraticCurveTo(x + w, y + h, x + w, y + h * 0.9);
-                    ctx.lineTo(x + w, y + h * 0.3);
-                    ctx.lineTo(x + w * 0.8, y + h * 0.2);
-                    ctx.lineTo(x + w * 0.8, y);
-                    ctx.closePath();
-                    ctx.fill();
-                    ctx.stroke();
-                    
-                    // Liquid with gradient
-                    const liquidGrad = ctx.createLinearGradient(x, y + h * 0.5, x, y + h * 0.9);
-                    liquidGrad.addColorStop(0, 'rgba(255, 107, 107, 0.8)');
-                    liquidGrad.addColorStop(1, 'rgba(255, 50, 50, 0.6)');
-                    ctx.fillStyle = liquidGrad;
-                    ctx.fillRect(x + w * 0.1, y + h * 0.5, w * 0.8, h * 0.4);
-                    
-                    // Shine
-                    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-                    ctx.fillRect(x + w * 0.15, y + h * 0.35, w * 0.1, h * 0.3);
-                    break;
-                    
-                case 'flask':
-                    const flaskGrad = ctx.createLinearGradient(x, y, x + w, y + h);
-                    flaskGrad.addColorStop(0, '#a5f3e6');
-                    flaskGrad.addColorStop(1, '#6fbfaf');
-                    ctx.fillStyle = flaskGrad;
-                    ctx.strokeStyle = '#4a9580';
-                    ctx.lineWidth = 2.5;
-                    
-                    ctx.beginPath();
-                    ctx.moveTo(x + w * 0.35, y);
-                    ctx.lineTo(x + w * 0.35, y + h * 0.3);
-                    ctx.lineTo(x, y + h * 0.9);
-                    ctx.quadraticCurveTo(x, y + h, x + w * 0.1, y + h);
-                    ctx.lineTo(x + w * 0.9, y + h);
-                    ctx.quadraticCurveTo(x + w, y + h, x + w, y + h * 0.9);
-                    ctx.lineTo(x + w * 0.65, y + h * 0.3);
-                    ctx.lineTo(x + w * 0.65, y);
-                    ctx.closePath();
-                    ctx.fill();
-                    ctx.stroke();
-                    
-                    // Liquid
-                    const flaskLiquidGrad = ctx.createLinearGradient(x, y + h * 0.7, x, y + h * 0.95);
-                    flaskLiquidGrad.addColorStop(0, 'rgba(255, 195, 0, 0.8)');
-                    flaskLiquidGrad.addColorStop(1, 'rgba(255, 165, 0, 0.6)');
-                    ctx.fillStyle = flaskLiquidGrad;
-                    ctx.beginPath();
-                    ctx.moveTo(x + w * 0.15, y + h * 0.7);
-                    ctx.lineTo(x + w * 0.1, y + h * 0.95);
-                    ctx.lineTo(x + w * 0.9, y + h * 0.95);
-                    ctx.lineTo(x + w * 0.85, y + h * 0.7);
-                    ctx.closePath();
-                    ctx.fill();
-                    
-                    // Shine
-                    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-                    ctx.fillRect(x + w * 0.55, y + h * 0.15, w * 0.08, h * 0.25);
-                    break;
-                    
-                case 'screw':
-                    const screwGrad = ctx.createRadialGradient(x + w * 0.15, y + h / 2, 0,
-                                                               x + w * 0.15, y + h / 2, w * 0.2);
-                    screwGrad.addColorStop(0, '#e0e0e0');
-                    screwGrad.addColorStop(1, '#a0a0a0');
-                    ctx.fillStyle = screwGrad;
-                    ctx.strokeStyle = '#707070';
-                    ctx.lineWidth = 2;
-                    
-                    // Head
-                    ctx.beginPath();
-                    ctx.arc(x + w * 0.15, y + h / 2, w * 0.15, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.stroke();
-                    
-                    // Cross
-                    ctx.strokeStyle = '#505050';
-                    ctx.lineWidth = 2;
-                    ctx.beginPath();
-                    ctx.moveTo(x + w * 0.05, y + h / 2);
-                    ctx.lineTo(x + w * 0.25, y + h / 2);
-                    ctx.moveTo(x + w * 0.15, y + h * 0.4);
-                    ctx.lineTo(x + w * 0.15, y + h * 0.6);
-                    ctx.stroke();
-                    
-                    // Body with metallic gradient
-                    const bodyGrad = ctx.createLinearGradient(x + w * 0.3, y, x + w, y);
-                    bodyGrad.addColorStop(0, '#b0b0b0');
-                    bodyGrad.addColorStop(0.5, '#d0d0d0');
-                    bodyGrad.addColorStop(1, '#909090');
-                    ctx.fillStyle = bodyGrad;
-                    ctx.fillRect(x + w * 0.3, y + h * 0.4, w * 0.7, h * 0.2);
-                    
-                    // Threads
-                    ctx.strokeStyle = '#606060';
-                    ctx.lineWidth = 1.5;
-                    for (let i = 0; i < 6; i++) {
-                        ctx.beginPath();
-                        ctx.moveTo(x + w * (0.35 + i * 0.1), y + h * 0.4);
-                        ctx.lineTo(x + w * (0.35 + i * 0.1), y + h * 0.6);
-                        ctx.stroke();
-                    }
-                    break;
-                    
-                case 'bolt':
-                    const boltGrad = ctx.createLinearGradient(x, y + h * 0.3, x, y + h * 0.7);
-                    boltGrad.addColorStop(0, '#c8c8c8');
-                    boltGrad.addColorStop(0.5, '#e0e0e0');
-                    boltGrad.addColorStop(1, '#a8a8a8');
-                    ctx.fillStyle = boltGrad;
-                    ctx.strokeStyle = '#707070';
-                    ctx.lineWidth = 2.5;
-                    
+                case 'bolt': // 🔩
                     // Hex head
+                    ctx.fillStyle = '#c0c0c0';
+                    ctx.strokeStyle = '#808080';
+                    ctx.lineWidth = 2;
                     ctx.beginPath();
                     for (let i = 0; i < 6; i++) {
                         const angle = (Math.PI / 3) * i;
-                        const bx = x + w * 0.15 + Math.cos(angle) * w * 0.14;
-                        const by = y + h / 2 + Math.sin(angle) * w * 0.14;
+                        const bx = x + w * 0.2 + Math.cos(angle) * w * 0.15;
+                        const by = y + h / 2 + Math.sin(angle) * w * 0.15;
                         if (i === 0) ctx.moveTo(bx, by);
                         else ctx.lineTo(bx, by);
                     }
@@ -583,29 +465,63 @@
                     ctx.fill();
                     ctx.stroke();
                     
-                    // Body
+                    // Threaded shaft
                     ctx.fillStyle = '#a0a0a0';
-                    ctx.fillRect(x + w * 0.3, y + h * 0.35, w * 0.65, h * 0.3);
-                    ctx.strokeRect(x + w * 0.3, y + h * 0.35, w * 0.65, h * 0.3);
+                    ctx.fillRect(x + w * 0.35, y + h * 0.38, w * 0.6, h * 0.24);
                     
-                    // Highlight
-                    ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-                    ctx.fillRect(x + w * 0.32, y + h * 0.37, w * 0.15, h * 0.06);
+                    // Thread lines
+                    ctx.strokeStyle = '#707070';
+                    ctx.lineWidth = 1.5;
+                    for (let i = 0; i < 8; i++) {
+                        const tx = x + w * (0.4 + i * 0.07);
+                        ctx.beginPath();
+                        ctx.moveTo(tx, y + h * 0.38);
+                        ctx.lineTo(tx, y + h * 0.62);
+                        ctx.stroke();
+                    }
                     break;
                     
-                case 'gear':
-                    const gearGrad = ctx.createRadialGradient(x + w/2, y + h/2, 0,
-                                                              x + w/2, y + h/2, Math.min(w, h) * 0.4);
-                    gearGrad.addColorStop(0, '#a0a0a0');
-                    gearGrad.addColorStop(0.5, '#888888');
-                    gearGrad.addColorStop(1, '#606060');
-                    ctx.fillStyle = gearGrad;
-                    ctx.strokeStyle = '#404040';
+                case 'wrench': // 🔧
+                    // Handle
+                    ctx.fillStyle = '#b0b0b0';
+                    ctx.strokeStyle = '#707070';
+                    ctx.lineWidth = 2;
+                    ctx.fillRect(x + w * 0.3, y + h * 0.4, w * 0.5, h * 0.2);
+                    ctx.strokeRect(x + w * 0.3, y + h * 0.4, w * 0.5, h * 0.2);
+                    
+                    // Open jaw
+                    ctx.beginPath();
+                    ctx.moveTo(x + w * 0.8, y + h * 0.35);
+                    ctx.lineTo(x + w * 0.95, y + h * 0.25);
+                    ctx.lineTo(x + w, y + h * 0.3);
+                    ctx.lineTo(x + w, y + h * 0.7);
+                    ctx.lineTo(x + w * 0.95, y + h * 0.75);
+                    ctx.lineTo(x + w * 0.8, y + h * 0.65);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.stroke();
+                    
+                    // Closed end
+                    ctx.beginPath();
+                    ctx.arc(x + w * 0.15, y + h / 2, w * 0.15, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.stroke();
+                    
+                    // Hole
+                    ctx.fillStyle = '#0f0f1e';
+                    ctx.beginPath();
+                    ctx.arc(x + w * 0.15, y + h / 2, w * 0.08, 0, Math.PI * 2);
+                    ctx.fill();
+                    break;
+                    
+                case 'gear': // ⚙️
+                    ctx.fillStyle = '#909090';
+                    ctx.strokeStyle = '#505050';
                     ctx.lineWidth = 2;
                     
-                    const teeth = 10;
-                    const innerRadius = Math.min(w, h) * 0.28;
-                    const outerRadius = Math.min(w, h) * 0.42;
+                    const teeth = 12;
+                    const innerRadius = Math.min(w, h) * 0.32;
+                    const outerRadius = Math.min(w, h) * 0.45;
                     
                     ctx.beginPath();
                     for (let i = 0; i < teeth * 2; i++) {
@@ -622,119 +538,149 @@
                     
                     // Center hole
                     ctx.fillStyle = '#0f0f1e';
-                    ctx.strokeStyle = '#303030';
                     ctx.beginPath();
                     ctx.arc(x + w / 2, y + h / 2, innerRadius * 0.5, 0, Math.PI * 2);
                     ctx.fill();
                     ctx.stroke();
                     
-                    // Bolts on gear
-                    for (let i = 0; i < 4; i++) {
-                        const angle = (Math.PI / 2) * i + Math.PI / 4;
-                        const bx = x + w / 2 + Math.cos(angle) * innerRadius * 0.8;
-                        const by = y + h / 2 + Math.sin(angle) * innerRadius * 0.8;
-                        ctx.fillStyle = '#505050';
+                    // Bolt holes
+                    for (let i = 0; i < 3; i++) {
+                        const angle = (Math.PI * 2 / 3) * i;
+                        const bx = x + w / 2 + Math.cos(angle) * innerRadius * 0.75;
+                        const by = y + h / 2 + Math.sin(angle) * innerRadius * 0.75;
+                        ctx.fillStyle = '#303030';
                         ctx.beginPath();
-                        ctx.arc(bx, by, innerRadius * 0.15, 0, Math.PI * 2);
+                        ctx.arc(bx, by, w * 0.05, 0, Math.PI * 2);
                         ctx.fill();
                     }
                     break;
                     
-                case 'wrench':
-                    const wrenchGrad = ctx.createLinearGradient(x, y, x + w, y);
-                    wrenchGrad.addColorStop(0, '#c0c0c0');
-                    wrenchGrad.addColorStop(0.5, '#d8d8d8');
-                    wrenchGrad.addColorStop(1, '#a0a0a0');
-                    ctx.fillStyle = wrenchGrad;
-                    ctx.strokeStyle = '#606060';
-                    ctx.lineWidth = 2.5;
-                    
+                case 'hammer': // 🔨
                     // Handle
-                    ctx.fillRect(x + w * 0.3, y + h * 0.4, w * 0.6, h * 0.2);
-                    ctx.strokeRect(x + w * 0.3, y + h * 0.4, w * 0.6, h * 0.2);
+                    ctx.fillStyle = '#8b4513';
+                    ctx.strokeStyle = '#5d2f0b';
+                    ctx.lineWidth = 2;
+                    ctx.fillRect(x + w * 0.1, y + h * 0.42, w * 0.6, h * 0.16);
+                    ctx.strokeRect(x + w * 0.1, y + h * 0.42, w * 0.6, h * 0.16);
                     
-                    // Open end
+                    // Head
+                    ctx.fillStyle = '#505050';
+                    ctx.strokeStyle = '#303030';
+                    ctx.fillRect(x + w * 0.65, y + h * 0.25, w * 0.3, h * 0.5);
+                    ctx.strokeRect(x + w * 0.65, y + h * 0.25, w * 0.3, h * 0.5);
+                    
+                    // Claw
                     ctx.beginPath();
-                    ctx.moveTo(x, y + h * 0.3);
-                    ctx.lineTo(x + w * 0.25, y + h * 0.4);
-                    ctx.lineTo(x + w * 0.25, y + h * 0.6);
-                    ctx.lineTo(x, y + h * 0.7);
-                    ctx.lineTo(x + w * 0.1, y + h / 2);
+                    ctx.moveTo(x + w * 0.65, y + h * 0.3);
+                    ctx.lineTo(x + w * 0.6, y + h * 0.2);
+                    ctx.lineTo(x + w * 0.55, y + h * 0.3);
                     ctx.closePath();
                     ctx.fill();
                     ctx.stroke();
                     
-                    // Highlight
-                    ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-                    ctx.fillRect(x + w * 0.35, y + h * 0.42, w * 0.3, h * 0.05);
+                    ctx.beginPath();
+                    ctx.moveTo(x + w * 0.65, y + h * 0.7);
+                    ctx.lineTo(x + w * 0.6, y + h * 0.8);
+                    ctx.lineTo(x + w * 0.55, y + h * 0.7);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.stroke();
                     break;
                     
-                case 'nail':
-                    const nailGrad = ctx.createLinearGradient(x, y, x + w, y);
-                    nailGrad.addColorStop(0, '#d8d8d8');
-                    nailGrad.addColorStop(0.5, '#f0f0f0');
-                    nailGrad.addColorStop(1, '#b8b8b8');
-                    
-                    // Head
-                    const headGrad = ctx.createRadialGradient(x + w * 0.1, y + h / 2, 0,
-                                                              x + w * 0.1, y + h / 2, w * 0.12);
-                    headGrad.addColorStop(0, '#e8e8e8');
-                    headGrad.addColorStop(1, '#a8a8a8');
-                    ctx.fillStyle = headGrad;
-                    ctx.strokeStyle = '#787878';
+                case 'lightning': // ⚡
+                    ctx.fillStyle = '#ffff00';
+                    ctx.strokeStyle = '#ffcc00';
                     ctx.lineWidth = 2;
+                    
                     ctx.beginPath();
-                    ctx.arc(x + w * 0.1, y + h / 2, w * 0.11, 0, Math.PI * 2);
+                    ctx.moveTo(x + w * 0.5, y);
+                    ctx.lineTo(x + w * 0.3, y + h * 0.4);
+                    ctx.lineTo(x + w * 0.5, y + h * 0.4);
+                    ctx.lineTo(x + w * 0.2, y + h);
+                    ctx.lineTo(x + w * 0.6, y + h * 0.5);
+                    ctx.lineTo(x + w * 0.5, y + h * 0.5);
+                    ctx.lineTo(x + w * 0.8, y);
+                    ctx.closePath();
                     ctx.fill();
                     ctx.stroke();
                     
-                    // Body
-                    ctx.fillStyle = nailGrad;
-                    ctx.fillRect(x + w * 0.2, y + h * 0.45, w * 0.75, h * 0.1);
-                    ctx.strokeRect(x + w * 0.2, y + h * 0.45, w * 0.75, h * 0.1);
-                    
-                    // Point
-                    ctx.beginPath();
-                    ctx.moveTo(x + w * 0.95, y + h * 0.45);
-                    ctx.lineTo(x + w, y + h / 2);
-                    ctx.lineTo(x + w * 0.95, y + h * 0.55);
+                    // Inner glow
+                    ctx.shadowBlur = 20;
+                    ctx.shadowColor = '#ffff00';
                     ctx.fill();
-                    
-                    // Shine on body
-                    ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-                    ctx.fillRect(x + w * 0.25, y + h * 0.46, w * 0.5, h * 0.03);
+                    ctx.shadowBlur = 0;
                     break;
                     
-                case 'spring':
-                    ctx.strokeStyle = '#b0b0b0';
-                    ctx.lineWidth = 4;
-                    ctx.lineCap = 'round';
-                    ctx.shadowBlur = 5;
-                    ctx.shadowColor = '#606060';
+                case 'diamond': // 💎
+                    const diamondGrad = ctx.createLinearGradient(x, y, x + w, y + h);
+                    diamondGrad.addColorStop(0, '#00ffff');
+                    diamondGrad.addColorStop(0.5, '#0099ff');
+                    diamondGrad.addColorStop(1, '#0066ff');
+                    ctx.fillStyle = diamondGrad;
+                    ctx.strokeStyle = '#0044aa';
+                    ctx.lineWidth = 2;
                     
                     ctx.beginPath();
-                    const coils = 8;
-                    for (let i = 0; i <= coils * 4; i++) {
-                        const progress = i / (coils * 4);
-                        const sx = x + w * progress;
-                        const sy = y + h / 2 + Math.sin(i * Math.PI / 2) * h * 0.38;
-                        if (i === 0) ctx.moveTo(sx, sy);
-                        else ctx.lineTo(sx, sy);
-                    }
+                    ctx.moveTo(x + w * 0.5, y);
+                    ctx.lineTo(x + w * 0.85, y + h * 0.35);
+                    ctx.lineTo(x + w * 0.5, y + h);
+                    ctx.lineTo(x + w * 0.15, y + h * 0.35);
+                    ctx.closePath();
+                    ctx.fill();
                     ctx.stroke();
                     
-                    // Highlight on spring
-                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+                    // Facets
+                    ctx.strokeStyle = '#6699ff';
                     ctx.lineWidth = 1.5;
                     ctx.beginPath();
-                    for (let i = 0; i <= coils * 4; i++) {
-                        const progress = i / (coils * 4);
-                        const sx = x + w * progress;
-                        const sy = y + h / 2 + Math.sin(i * Math.PI / 2) * h * 0.32;
-                        if (i === 0) ctx.moveTo(sx, sy);
-                        else ctx.lineTo(sx, sy);
-                    }
+                    ctx.moveTo(x + w * 0.5, y);
+                    ctx.lineTo(x + w * 0.5, y + h);
+                    ctx.moveTo(x + w * 0.15, y + h * 0.35);
+                    ctx.lineTo(x + w * 0.85, y + h * 0.35);
                     ctx.stroke();
+                    
+                    // Sparkle
+                    ctx.shadowBlur = 15;
+                    ctx.shadowColor = '#00ffff';
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(x + w * 0.48, y + h * 0.15, w * 0.04, h * 0.1);
+                    ctx.shadowBlur = 0;
+                    break;
+                    
+                case 'flask': // 🧪
+                    // Glass body
+                    ctx.fillStyle = 'rgba(200, 200, 255, 0.4)';
+                    ctx.strokeStyle = '#8888ff';
+                    ctx.lineWidth = 2;
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(x + w * 0.35, y);
+                    ctx.lineTo(x + w * 0.35, y + h * 0.3);
+                    ctx.lineTo(x + w * 0.1, y + h * 0.5);
+                    ctx.lineTo(x + w * 0.1, y + h * 0.9);
+                    ctx.quadraticCurveTo(x + w * 0.1, y + h, x + w * 0.2, y + h);
+                    ctx.lineTo(x + w * 0.8, y + h);
+                    ctx.quadraticCurveTo(x + w * 0.9, y + h, x + w * 0.9, y + h * 0.9);
+                    ctx.lineTo(x + w * 0.9, y + h * 0.5);
+                    ctx.lineTo(x + w * 0.65, y + h * 0.3);
+                    ctx.lineTo(x + w * 0.65, y);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.stroke();
+                    
+                    // Liquid
+                    ctx.fillStyle = 'rgba(0, 255, 100, 0.7)';
+                    ctx.beginPath();
+                    ctx.moveTo(x + w * 0.15, y + h * 0.7);
+                    ctx.lineTo(x + w * 0.2, y + h * 0.95);
+                    ctx.lineTo(x + w * 0.8, y + h * 0.95);
+                    ctx.lineTo(x + w * 0.85, y + h * 0.7);
+                    ctx.closePath();
+                    ctx.fill();
+                    
+                    // Shine
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+                    ctx.fillRect(x + w * 0.55, y + h * 0.05, w * 0.08, h * 0.25);
                     break;
             }
             
@@ -746,80 +692,62 @@
             ctx.translate(x, y);
             ctx.rotate(rotation);
             
-            const size = MAGNET_SIZE;
-            const thickness = size * 0.32;
+            // Draw CLASSIC horseshoe magnet like 🧲 emoji
+            const w = MAGNET_WIDTH;
+            const h = MAGNET_HEIGHT;
+            const thickness = 12;
+            
+            // Outer U-shape (RED)
+            ctx.fillStyle = '#ff0000';
+            ctx.strokeStyle = '#cc0000';
+            ctx.lineWidth = 2;
+            
+            ctx.beginPath();
+            // Left vertical part
+            ctx.rect(-w/2, -h/2, thickness, h);
+            ctx.fill();
+            ctx.stroke();
+            
+            // Right vertical part
+            ctx.beginPath();
+            ctx.rect(w/2 - thickness, -h/2, thickness, h);
+            ctx.fill();
+            ctx.stroke();
+            
+            // Bottom connector
+            ctx.beginPath();
+            ctx.rect(-w/2, h/2 - thickness, w, thickness);
+            ctx.fill();
+            ctx.stroke();
+            
+            // Silver/gray caps on the ends
+            ctx.fillStyle = '#d0d0d0';
+            ctx.strokeStyle = '#909090';
+            
+            // Top left cap
+            ctx.fillRect(-w/2 - 2, -h/2 - 4, thickness + 4, 6);
+            ctx.strokeRect(-w/2 - 2, -h/2 - 4, thickness + 4, 6);
+            
+            // Top right cap
+            ctx.fillRect(w/2 - thickness - 2, -h/2 - 4, thickness + 4, 6);
+            ctx.strokeRect(w/2 - thickness - 2, -h/2 - 4, thickness + 4, 6);
+            
+            // Add N and S labels
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 14px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('N', -w/2 + thickness/2, -h/4);
+            ctx.fillText('S', w/2 - thickness/2, -h/4);
             
             // Glow effect
             ctx.shadowBlur = 20;
-            ctx.shadowColor = gameState.magnetSide === 'left' ? '#ff3333' : '#3333ff';
-            
-            // Metal body with gradient
-            const bodyGrad = ctx.createLinearGradient(-size * 0.6, -size * 0.6, -size * 0.6, size * 0.6);
-            bodyGrad.addColorStop(0, '#e8e8e8');
-            bodyGrad.addColorStop(0.5, '#d0d0d0');
-            bodyGrad.addColorStop(1, '#b0b0b0');
-            
-            // Draw curved back
-            ctx.strokeStyle = bodyGrad;
-            ctx.lineWidth = thickness;
-            ctx.lineCap = 'round';
-            ctx.beginPath();
-            ctx.arc(-size * 0.08, 0, size * 0.48, Math.PI * 0.65, Math.PI * 1.35);
-            ctx.stroke();
-            
-            // North pole (red) with gradient
-            const northGrad = ctx.createLinearGradient(-size * 0.5, -size * 0.65, -size * 0.5, -size * 0.15);
-            northGrad.addColorStop(0, '#ff5555');
-            northGrad.addColorStop(0.5, '#ff3333');
-            northGrad.addColorStop(1, '#dd1111');
-            
-            ctx.strokeStyle = northGrad;
-            ctx.lineWidth = thickness;
-            ctx.shadowBlur = 25;
-            ctx.shadowColor = '#ff3333';
-            ctx.beginPath();
-            ctx.moveTo(-size * 0.5, -size * 0.18);
-            ctx.lineTo(-size * 0.5, -size * 0.58);
-            ctx.stroke();
-            
-            // North cap
-            ctx.fillStyle = northGrad;
-            ctx.shadowBlur = 20;
-            ctx.fillRect(-size * 0.5 - thickness / 2, -size * 0.68, thickness, thickness * 0.8);
-            
-            // Label N with glow
-            ctx.shadowBlur = 10;
-            ctx.shadowColor = '#ffffff';
-            ctx.fillStyle = '#ffffff';
-            ctx.font = 'bold 16px Arial';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText('N', -size * 0.5, -size * 0.38);
-            
-            // South pole (blue) with gradient
-            const southGrad = ctx.createLinearGradient(-size * 0.5, size * 0.15, -size * 0.5, size * 0.65);
-            southGrad.addColorStop(0, '#5555ff');
-            southGrad.addColorStop(0.5, '#3333ff');
-            southGrad.addColorStop(1, '#1111dd');
-            
-            ctx.strokeStyle = southGrad;
-            ctx.lineWidth = thickness;
-            ctx.shadowBlur = 25;
-            ctx.shadowColor = '#3333ff';
-            ctx.beginPath();
-            ctx.moveTo(-size * 0.5, size * 0.18);
-            ctx.lineTo(-size * 0.5, size * 0.58);
-            ctx.stroke();
-            
-            // South cap
-            ctx.fillStyle = southGrad;
-            ctx.shadowBlur = 20;
-            ctx.fillRect(-size * 0.5 - thickness / 2, size * 0.68 - thickness * 0.8, thickness, thickness * 0.8);
-            
-            // Label S with glow
-            ctx.shadowBlur = 10;
-            ctx.fillStyle = '#ffffff';
-            ctx.fillText('S', -size * 0.5, size * 0.38);
+            ctx.shadowColor = '#ff0000';
+            ctx.globalAlpha = 0.3;
+            ctx.fillStyle = '#ff0000';
+            ctx.fillRect(-w/2 - 5, -h/2 - 5, thickness + 10, h + 10);
+            ctx.fillRect(w/2 - thickness - 5, -h/2 - 5, thickness + 10, h + 10);
+            ctx.fillRect(-w/2 - 5, h/2 - thickness - 5, w + 10, thickness + 10);
             
             ctx.restore();
         }
