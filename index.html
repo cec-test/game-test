@@ -76,24 +76,7 @@
             background: #000;
             box-shadow: 
                 0 0 50px rgba(255, 0, 255, 0.6),
-                0 0 100px rgba(0, 255, 255, 0.4),
-                inset 0 0 50px rgba(255, 0, 255, 0.2);
-            animation: boxGlow 2s ease-in-out infinite;
-        }
-
-        @keyframes boxGlow {
-            0%, 100% { 
-                box-shadow: 
-                    0 0 50px rgba(255, 0, 255, 0.6),
-                    0 0 100px rgba(0, 255, 255, 0.4),
-                    inset 0 0 50px rgba(255, 0, 255, 0.2);
-            }
-            50% { 
-                box-shadow: 
-                    0 0 80px rgba(255, 0, 255, 0.8),
-                    0 0 120px rgba(0, 255, 255, 0.6),
-                    inset 0 0 80px rgba(255, 0, 255, 0.3);
-            }
+                0 0 100px rgba(0, 255, 255, 0.4);
         }
 
         #gameCanvas {
@@ -120,12 +103,6 @@
             -webkit-text-fill-color: transparent;
             background-clip: text;
             filter: drop-shadow(0 0 20px #ff00ff);
-            animation: textGlow 1.5s ease-in-out infinite;
-        }
-
-        @keyframes textGlow {
-            0%, 100% { filter: drop-shadow(0 0 10px #ff00ff); }
-            50% { filter: drop-shadow(0 0 30px #00ffff); }
         }
 
         .game-over, .start-screen {
@@ -155,13 +132,6 @@
             -webkit-text-fill-color: transparent;
             background-clip: text;
             filter: drop-shadow(0 0 40px #ff0055);
-            animation: shakeTitle 0.5s ease-in-out infinite;
-        }
-
-        @keyframes shakeTitle {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-5px); }
-            75% { transform: translateX(5px); }
         }
 
         .start-screen h2 {
@@ -247,6 +217,7 @@
             <div id="startScreen" class="start-screen">
                 <h2>◤ POLARITY ◢</h2>
                 <p>▸ PRESS SPACE TO SWITCH SIDES ◂</p>
+                <p>▸ EACH SWITCH = +5 POINTS ◂</p>
                 <p>▸ DODGE OBSTACLES ◂</p>
                 <p>▸ BUILD MASSIVE COMBOS ◂</p>
                 <button id="startBtn">⚡ START ⚡</button>
@@ -256,7 +227,7 @@
             <div class="score">SCORE: <span id="score">0</span></div>
             <div class="combo" id="comboDisplay" style="display: none;">COMBO: <span id="combo">0</span>x</div>
         </div>
-        <div class="instructions">◆ SPACEBAR TO SWITCH ◆ SURVIVE ◆</div>
+        <div class="instructions">◆ SPACEBAR TO SWITCH (+5 PTS) ◆ SURVIVE ◆</div>
     </div>
     <script>
         const canvas = document.getElementById('gameCanvas');
@@ -274,8 +245,8 @@
         const WALL_WIDTH = 3;
         const MAGNET_WIDTH = 38;
         const MAGNET_HEIGHT = 32;
-        const INITIAL_OBSTACLE_SPEED = 3;
-        const INITIAL_SPAWN_RATE = 80;
+        const INITIAL_OBSTACLE_SPEED = 3.5;
+        const INITIAL_SPAWN_RATE = 75;
 
         const OBSTACLE_TYPES = [
             { name: 'bolt', minWidth: 20, maxWidth: 30, minHeight: 55, maxHeight: 85 },
@@ -306,9 +277,7 @@
             particles: [],
             trails: [],
             screenShake: 0,
-            chromaticAberration: 0,
             floatingTexts: [],
-            bgPulse: 0,
             time: 0
         };
 
@@ -322,8 +291,12 @@
                 } else if (gameState.isPlaying) {
                     switchSides();
                     createSwitchParticles();
-                    gameState.screenShake = 8;
-                    gameState.chromaticAberration = 15;
+                    gameState.screenShake = 6;
+                    
+                    // +5 points for switching!
+                    gameState.score += 5;
+                    scoreElement.textContent = gameState.score;
+                    addFloatingText('+5', gameState.magnetX, gameState.magnetY - 30, '#00ffff', 20);
                 }
             }
         });
@@ -350,9 +323,7 @@
                 particles: [],
                 trails: [],
                 screenShake: 0,
-                chromaticAberration: 0,
                 floatingTexts: [],
-                bgPulse: 0,
                 time: 0
             };
             
@@ -371,31 +342,33 @@
         }
 
         function createSwitchParticles() {
-            for (let i = 0; i < 30; i++) {
-                const angle = (Math.PI * 2 * i) / 30;
+            // Reduced from 30 to 12 for performance
+            for (let i = 0; i < 12; i++) {
+                const angle = (Math.PI * 2 * i) / 12;
                 gameState.particles.push({
                     x: gameState.magnetX,
                     y: gameState.magnetY,
-                    vx: Math.cos(angle) * (5 + Math.random() * 5),
-                    vy: Math.sin(angle) * (5 + Math.random() * 5),
+                    vx: Math.cos(angle) * (4 + Math.random() * 3),
+                    vy: Math.sin(angle) * (4 + Math.random() * 3),
                     life: 1,
-                    size: 3 + Math.random() * 4,
-                    color: ['#ff00ff', '#00ffff', '#ffff00'][Math.floor(Math.random() * 3)]
+                    size: 3 + Math.random() * 3,
+                    color: ['#ff00ff', '#00ffff'][Math.floor(Math.random() * 2)]
                 });
             }
         }
 
-        function createExplosion(x, y, count = 50) {
+        function createExplosion(x, y, count = 20) {
+            // Reduced from 50 to 20
             for (let i = 0; i < count; i++) {
                 const angle = (Math.PI * 2 * i) / count;
                 gameState.particles.push({
                     x: x,
                     y: y,
-                    vx: Math.cos(angle) * (3 + Math.random() * 8),
-                    vy: Math.sin(angle) * (3 + Math.random() * 8),
+                    vx: Math.cos(angle) * (3 + Math.random() * 5),
+                    vy: Math.sin(angle) * (3 + Math.random() * 5),
                     life: 1,
-                    size: 2 + Math.random() * 5,
-                    color: ['#ff0055', '#ff00ff', '#ffff00'][Math.floor(Math.random() * 3)]
+                    size: 2 + Math.random() * 4,
+                    color: ['#ff0055', '#ff00ff'][Math.floor(Math.random() * 2)]
                 });
             }
         }
@@ -405,7 +378,7 @@
                 text: text,
                 x: x,
                 y: y,
-                vy: -3,
+                vy: -2.5,
                 life: 1,
                 color: color,
                 size: size
@@ -417,9 +390,9 @@
                 const p = gameState.particles[i];
                 p.x += p.vx;
                 p.y += p.vy;
-                p.life -= 0.015;
-                p.vx *= 0.98;
-                p.vy *= 0.98;
+                p.life -= 0.02;
+                p.vx *= 0.97;
+                p.vy *= 0.97;
                 
                 if (p.life <= 0) {
                     gameState.particles.splice(i, 1);
@@ -429,7 +402,7 @@
             for (let i = gameState.floatingTexts.length - 1; i >= 0; i--) {
                 const t = gameState.floatingTexts[i];
                 t.y += t.vy;
-                t.life -= 0.012;
+                t.life -= 0.015;
                 t.vy *= 0.95;
                 
                 if (t.life <= 0) {
@@ -448,12 +421,13 @@
                 });
             }
 
-            if (gameState.trails.length > 20) {
+            // Reduced from 20 to 10
+            if (gameState.trails.length > 10) {
                 gameState.trails.shift();
             }
 
             gameState.trails.forEach(t => {
-                t.life -= 0.05;
+                t.life -= 0.08;
             });
         }
 
@@ -508,13 +482,6 @@
                 if (gameState.screenShake < 0.5) gameState.screenShake = 0;
             }
             
-            if (gameState.chromaticAberration > 0) {
-                gameState.chromaticAberration *= 0.9;
-                if (gameState.chromaticAberration < 0.5) gameState.chromaticAberration = 0;
-            }
-            
-            gameState.bgPulse += 0.05;
-            
             gameState.spawnCounter++;
             if (gameState.spawnCounter >= gameState.spawnRate) {
                 spawnObstacle();
@@ -527,9 +494,8 @@
                 obstacle.rotation += 0.02;
                 
                 if (checkCollision(obstacle)) {
-                    createExplosion(gameState.magnetX, gameState.magnetY, 80);
-                    gameState.screenShake = 30;
-                    gameState.chromaticAberration = 30;
+                    createExplosion(gameState.magnetX, gameState.magnetY, 30);
+                    gameState.screenShake = 25;
                     endGame();
                     return;
                 }
@@ -542,9 +508,9 @@
                         const bonus = 25;
                         gameState.score += bonus;
                         gameState.combo++;
-                        addFloatingText('CLOSE! +' + bonus, obstacle.x, obstacle.y, '#ffff00', 28);
-                        createExplosion(obstacle.x, obstacle.y, 20);
-                        gameState.screenShake = 5;
+                        addFloatingText('CLOSE! +' + bonus, obstacle.x, obstacle.y, '#ffff00', 26);
+                        createExplosion(obstacle.x, obstacle.y, 12);
+                        gameState.screenShake = 4;
                     } else {
                         gameState.combo++;
                     }
@@ -558,8 +524,7 @@
                         }
                         
                         if (gameState.combo % 10 === 0) {
-                            addFloatingText('★ ' + gameState.combo + 'x COMBO! ★', canvas.width / 2, canvas.height / 3, '#ff00ff', 32);
-                            gameState.bgPulse = 0;
+                            addFloatingText('★ ' + gameState.combo + 'x COMBO! ★', canvas.width / 2, canvas.height / 3, '#ff00ff', 30);
                         }
                     }
                 }
@@ -575,9 +540,9 @@
                     
                     if (gameState.score % 100 === 0) {
                         gameState.difficulty += 0.15;
-                        gameState.obstacleSpeed = INITIAL_OBSTACLE_SPEED + gameState.difficulty * 0.6;
+                        gameState.obstacleSpeed = INITIAL_OBSTACLE_SPEED + gameState.difficulty * 0.65;
                         gameState.spawnRate = Math.max(35, INITIAL_SPAWN_RATE - gameState.difficulty * 6);
-                        addFloatingText('◆ SPEED UP! ◆', canvas.width / 2, canvas.height / 2, '#00ffff', 30);
+                        addFloatingText('◆ SPEED UP! ◆', canvas.width / 2, canvas.height / 2, '#00ffff', 28);
                     }
                 }
             }
@@ -613,53 +578,28 @@
                 );
             }
             
-            // Background with animated gradient
-            const bgGrad = ctx.createRadialGradient(canvas.width/2, canvas.height/2, 0, 
-                                                    canvas.width/2, canvas.height/2, canvas.width);
-            bgGrad.addColorStop(0, `rgba(20, 0, 40, ${0.5 + Math.sin(gameState.bgPulse) * 0.3})`);
-            bgGrad.addColorStop(1, '#000000');
-            ctx.fillStyle = bgGrad;
+            // Background
+            ctx.fillStyle = '#000000';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
-            // Grid effect
+            // Simplified grid (only draw every other line for performance)
             ctx.strokeStyle = 'rgba(255, 0, 255, 0.05)';
             ctx.lineWidth = 1;
-            for (let i = 0; i < canvas.width; i += 30) {
+            for (let i = 0; i < canvas.width; i += 60) {
                 ctx.beginPath();
                 ctx.moveTo(i, 0);
                 ctx.lineTo(i, canvas.height);
                 ctx.stroke();
             }
-            for (let i = 0; i < canvas.height; i += 30) {
+            for (let i = 0; i < canvas.height; i += 60) {
                 ctx.beginPath();
                 ctx.moveTo(0, i);
                 ctx.lineTo(canvas.width, i);
                 ctx.stroke();
             }
             
-            // Speed lines
-            if (gameState.obstacleSpeed > 4) {
-                ctx.strokeStyle = `rgba(255, 0, 255, ${0.1 + gameState.obstacleSpeed * 0.02})`;
-                ctx.lineWidth = 2;
-                for (let i = 0; i < 8; i++) {
-                    const x = Math.random() * canvas.width;
-                    const y = (gameState.time * 500 + i * 100) % canvas.height;
-                    ctx.beginPath();
-                    ctx.moveTo(x, y);
-                    ctx.lineTo(x, y + 50);
-                    ctx.stroke();
-                }
-            }
-            
-            // Walls with INSANE glow
-            const wallGrad1 = ctx.createLinearGradient(0, 0, WALL_WIDTH * 3, 0);
-            wallGrad1.addColorStop(0, '#ff00ff');
-            wallGrad1.addColorStop(1, 'transparent');
-            const wallGrad2 = ctx.createLinearGradient(canvas.width, 0, canvas.width - WALL_WIDTH * 3, 0);
-            wallGrad2.addColorStop(0, '#00ffff');
-            wallGrad2.addColorStop(1, 'transparent');
-            
-            ctx.shadowBlur = 40;
+            // Walls with glow
+            ctx.shadowBlur = 35;
             ctx.shadowColor = '#ff00ff';
             ctx.fillStyle = '#ff00ff';
             ctx.fillRect(0, 0, WALL_WIDTH, canvas.height);
@@ -667,24 +607,18 @@
             ctx.shadowColor = '#00ffff';
             ctx.fillStyle = '#00ffff';
             ctx.fillRect(canvas.width - WALL_WIDTH, 0, WALL_WIDTH, canvas.height);
-            
-            ctx.fillStyle = wallGrad1;
-            ctx.fillRect(WALL_WIDTH, 0, WALL_WIDTH * 3, canvas.height);
-            ctx.fillStyle = wallGrad2;
-            ctx.fillRect(canvas.width - WALL_WIDTH * 4, 0, WALL_WIDTH * 3, canvas.height);
-            
             ctx.shadowBlur = 0;
             
             // Trails
-            gameState.trails.forEach((t, i) => {
+            gameState.trails.forEach((t) => {
                 if (t.life > 0) {
                     ctx.save();
-                    ctx.globalAlpha = t.life * 0.6;
-                    ctx.shadowBlur = 30;
+                    ctx.globalAlpha = t.life * 0.5;
+                    ctx.shadowBlur = 20;
                     ctx.shadowColor = t.color;
                     ctx.fillStyle = t.color;
                     ctx.beginPath();
-                    ctx.arc(t.x, t.y, 15, 0, Math.PI * 2);
+                    ctx.arc(t.x, t.y, 12, 0, Math.PI * 2);
                     ctx.fill();
                     ctx.restore();
                 }
@@ -694,7 +628,7 @@
             gameState.particles.forEach(p => {
                 ctx.save();
                 ctx.globalAlpha = p.life;
-                ctx.shadowBlur = 20;
+                ctx.shadowBlur = 15;
                 ctx.shadowColor = p.color;
                 ctx.fillStyle = p.color;
                 ctx.beginPath();
@@ -703,12 +637,12 @@
                 ctx.restore();
             });
             
-            // Obstacles with GLOW
+            // Obstacles
             gameState.obstacles.forEach(obstacle => {
                 drawObstacle(obstacle);
             });
             
-            // Magnet with MAXIMUM GLOW
+            // Magnet
             drawMagnet(gameState.magnetX, gameState.magnetY, gameState.magnetRotation);
             
             // Floating texts
@@ -717,7 +651,7 @@
                 ctx.globalAlpha = t.life;
                 ctx.font = `bold ${t.size}px Orbitron`;
                 ctx.textAlign = 'center';
-                ctx.shadowBlur = 30;
+                ctx.shadowBlur = 25;
                 ctx.shadowColor = t.color;
                 ctx.fillStyle = t.color;
                 ctx.fillText(t.text, t.x, t.y);
@@ -725,28 +659,6 @@
             });
             
             ctx.restore();
-            
-            // Chromatic aberration effect
-            if (gameState.chromaticAberration > 2) {
-                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                const offset = Math.floor(gameState.chromaticAberration / 2);
-                const data = imageData.data;
-                const tempData = new Uint8ClampedArray(data);
-                
-                for (let i = 0; i < data.length; i += 4) {
-                    const redIndex = i - offset * 4 * canvas.width;
-                    const blueIndex = i + offset * 4 * canvas.width;
-                    
-                    if (redIndex >= 0 && redIndex < data.length) {
-                        data[i] = tempData[redIndex];
-                    }
-                    if (blueIndex >= 0 && blueIndex < data.length) {
-                        data[i + 2] = tempData[blueIndex + 2];
-                    }
-                }
-                
-                ctx.putImageData(imageData, 0, 0);
-            }
         }
 
         function drawObstacle(obstacle) {
@@ -769,7 +681,7 @@
                 'diamond': '#00ffff'
             };
             
-            ctx.shadowBlur = 30;
+            ctx.shadowBlur = 25;
             ctx.shadowColor = colors[obstacle.type] || '#ff0055';
             ctx.fillStyle = colors[obstacle.type] || '#ff0055';
             ctx.strokeStyle = colors[obstacle.type] || '#ff0055';
@@ -823,7 +735,7 @@
                     break;
                     
                 case 'lightning':
-                    ctx.shadowBlur = 50;
+                    ctx.shadowBlur = 35;
                     ctx.beginPath();
                     ctx.moveTo(x + w * 0.5, y);
                     ctx.lineTo(x + w * 0.3, y + h * 0.4);
@@ -837,7 +749,7 @@
                     break;
                     
                 case 'diamond':
-                    ctx.shadowBlur = 40;
+                    ctx.shadowBlur = 30;
                     ctx.beginPath();
                     ctx.moveTo(x + w * 0.5, y);
                     ctx.lineTo(x + w * 0.85, y + h * 0.35);
@@ -861,8 +773,7 @@
             const h = MAGNET_HEIGHT;
             const thickness = 12;
             
-            // INSANE GLOW
-            ctx.shadowBlur = 50;
+            ctx.shadowBlur = 40;
             ctx.shadowColor = gameState.magnetSide === 'left' ? '#ff00ff' : '#00ffff';
             
             const magnetGrad = ctx.createLinearGradient(-w/2, 0, w/2, 0);
@@ -875,15 +786,15 @@
             ctx.fillRect(w/2 - thickness, -h/2, thickness, h);
             ctx.fillRect(-w/2, h/2 - thickness, w, thickness);
             
-            // Caps with extreme glow
-            ctx.shadowBlur = 60;
+            // Caps
+            ctx.shadowBlur = 50;
             ctx.shadowColor = '#ffffff';
             ctx.fillStyle = '#ffffff';
             ctx.fillRect(-w/2 - 2, -h/2 - 6, thickness + 4, 8);
             ctx.fillRect(w/2 - thickness - 2, -h/2 - 6, thickness + 4, 8);
             
             // Labels
-            ctx.shadowBlur = 20;
+            ctx.shadowBlur = 15;
             ctx.fillStyle = '#000';
             ctx.font = 'bold 16px Orbitron';
             ctx.textAlign = 'center';
