@@ -139,6 +139,12 @@
             --card-rgb: 255, 0, 85;
         }
 
+        .game-card.coderunner {
+            --card-color1: #00ffff;
+            --card-color2: #00ff41;
+            --card-rgb: 0, 255, 255;
+        }
+
         .game-icon {
             font-size: 8em;
             margin-bottom: 20px;
@@ -195,6 +201,13 @@
 
         .game-card.velocity .game-title {
             background: linear-gradient(90deg, #ff0055, #ff3366);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .game-card.coderunner .game-title {
+            background: linear-gradient(90deg, #00ffff, #00ff41);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -310,6 +323,17 @@
                     Dodge bullets in slow motion.
                 </div>
                 <a href="velocity.html" class="play-btn">▶ PLAY</a>
+            </div>
+
+            <!-- Code Runner Card -->
+            <div class="game-card coderunner" onclick="window.location.href='coderunner.html'">
+                <div class="game-icon">▶️</div>
+                <div class="game-title">CODE RUNNER</div>
+                <div class="game-desc">
+                    Navigate binary data streams.
+                    Match lanes to incoming digits.
+                </div>
+                <a href="coderunner.html" class="play-btn">▶ PLAY</a>
             </div>
         </div>
     </div>

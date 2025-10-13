@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>CODE RUNNER</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@900&family=Share+Tech+Mono&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Orbitron', sans-serif;
+            background: #0a0a1f;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+            touch-action: none;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                linear-gradient(0deg, transparent 0%, rgba(0, 212, 255, 0.05) 50%, transparent 100%);
+            animation: scanline 4s linear infinite;
+        }
+
+        @keyframes scanline {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(100%); }
+        }
+
+        .container {
+            text-align: center;
+            padding: 10px;
+            position: relative;
+        }
+
+        h1 {
+            font-size: 3em;
+            margin-bottom: 15px;
+            letter-spacing: 15px;
+            background: linear-gradient(90deg, #00ffff, #00ff41, #00ffff);
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradientShift 3s ease infinite;
+            font-weight: 900;
+            text-shadow: 0 0 40px rgba(0, 255, 255, 0.8);
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .game-wrapper {
+            position: relative;
+            display: inline-block;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #000;
+            box-shadow: 0 0 50px rgba(0, 255, 255, 0.4), 0 0 100px rgba(0, 255, 65, 0.2);
+        }
+
+        #gameCanvas {
+            display: block;
+            background: #000;
+            border: 4px solid;
+            border-image: linear-gradient(180deg, #00ffff, #00ff41) 1;
+            cursor: pointer;
+        }
+
+        .info-bar {
+            margin-top: 15px;
+            display: flex;
+            justify-content: space-around;
+            gap: 20px;
+        }
+
+        .info-item {
+            font-size: 1.3em;
+            font-weight: 900;
+            color: #00ffff;
+            text-shadow: 0 0 20px rgba(0, 255, 255, 0.8);
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        .info-item span {
+            color: #00ff41;
+        }
+
+        .game-over, .start-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            backdrop-filter: blur(10px);
+            border: 2px solid #00ffff;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .game-over h2, .start-screen h2 {
+            font-size: 3.5em;
+            background: linear-gradient(90deg, #ff0055, #ff00ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 40px rgba(255, 0, 85, 0.8);
+            margin-bottom: 20px;
+        }
+
+        .start-screen h2 {
+            background: linear-gradient(90deg, #00ffff, #00ff41);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .game-over p, .start-screen p {
+            font-size: 1.2em;
+            margin: 10px 0;
+            color: #00ffff;
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        .start-screen .instructions {
+            max-width: 350px;
+            line-height: 1.6;
+            margin: 20px;
+        }
+
+        button {
+            margin: 15px 10px;
+            padding: 18px 50px;
+            font-size: 1.4em;
+            font-weight: 900;
+            font-family: 'Orbitron', sans-serif;
+            background: linear-gradient(90deg, #00ffff, #00ff41);
+            color: #000;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 0 40px rgba(0, 255, 255, 0.6);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+
+        button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 60px rgba(0, 255, 255, 1);
+        }
+
+        .button-secondary {
+            background: #004466;
+            color: #00ffff;
+            padding: 12px 30px;
+            font-size: 1em;
+        }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 2em; letter-spacing: 10px; }
+            .info-item { font-size: 1.1em; }
+            button { padding: 15px 35px; font-size: 1.2em; }
+            .game-over h2, .start-screen h2 { font-size: 2.5em; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>CODE RUNNER</h1>
+        <div class="game-wrapper">
+            <canvas id="gameCanvas" width="400" height="600"></canvas>
+            
+            <div id="gameOver" class="game-over hidden">
+                <h2>ERROR</h2>
+                <p>SCORE: <span id="finalScore" style="color: #00ff41;">0</span></p>
+                <p>COMBO: <span id="finalCombo" style="color: #ffaa00;">x0</span></p>
+                <p>TIME: <span id="survivalTime" style="color: #00ffff;">0s</span></p>
+                <p>HIGH SCORE: <span id="highScoreDisplay" style="color: #00ff41;">0</span></p>
+                <button onclick="startGame()">🔄 RETRY 🔄</button>
+                <button class="button-secondary" onclick="window.location.href='index.html'">◀ BACK TO MENU</button>
+            </div>
+            
+            <div id="startScreen" class="start-screen">
+                <h2>▶ CODE RUNNER ◀</h2>
+                <div class="instructions">
+                    <p>⚡ Navigate through binary data streams</p>
+                    <p>🎯 Match your lane to incoming digits:</p>
+                    <p style="color: #00ffff;">▸ Be in Lane 0 when 0 arrives</p>
+                    <p style="color: #ffaa00;">▸ Be in Lane 1 when 1 arrives</p>
+                    <p>⌨️ TAP or SPACEBAR to switch lanes</p>
+                    <p>💥 Wrong match = Game Over</p>
+                </div>
+                <button id="startBtn">⚡ START ⚡</button>
+                <button class="button-secondary" onclick="window.location.href='index.html'">◀ BACK</button>
+            </div>
+        </div>
+        <div class="info-bar">
+            <div class="info-item">SCORE: <span id="score">0</span></div>
+            <div class="info-item">COMBO: <span id="combo">x0</span></div>
+            <div class="info-item">TIME: <span id="time">0s</span></div>
+        </div>
+    </div>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreElement = document.getElementById('score');
+        const comboElement = document.getElementById('combo');
+        const timeElement = document.getElementById('time');
+        const finalScoreElement = document.getElementById('finalScore');
+        const finalComboElement = document.getElementById('finalCombo');
+        const survivalTimeElement = document.getElementById('survivalTime');
+        const highScoreDisplay = document.getElementById('highScoreDisplay');
+        const gameOverScreen = document.getElementById('gameOver');
+        const startScreen = document.getElementById('startScreen');
+        const startBtn = document.getElementById('startBtn');
+
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+                         ('ontouchstart' in window);
+
+        let highScore = parseInt(localStorage.getItem('codeRunnerHighScore')) || 0;
+
+        let gameState = {
+            isPlaying: false,
+            score: 0,
+            combo: 0,
+            maxCombo: 0,
+            survivalTime: 0,
+            playerLane: 0, // 0 or 1
+            digits: [],
+            particles: [],
+            speed: 200, // pixels per second
+            spawnTimer: 0,
+            spawnRate: 60, // frames between spawns
+            screenShake: 0,
+            gridOffset: 0
+        };
+
+        const LANE_WIDTH = canvas.width / 2;
+        const PLAYER_Y = canvas.height - 80;
+        const DIGIT_SIZE = 60;
+        const COLLISION_THRESHOLD = 30;
+
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContext();
+        let soundEnabled = true;
+
+        function playSound(freq, duration = 0.1, type = 'sine') {
+            if (!soundEnabled) return;
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.frequency.value = freq;
+                osc.type = type;
+                gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch(e) {}
+        }
+
+        function switchLane() {
+            if (!gameState.isPlaying) return;
+            gameState.playerLane = gameState.playerLane === 0 ? 1 : 0;
+            playSound(800, 0.05, 'square');
+            createSwitchParticles();
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                if (!gameState.isPlaying && startScreen.classList.contains('hidden') && !gameOverScreen.classList.contains('hidden')) {
+                    startGame();
+                } else if (!gameState.isPlaying && !startScreen.classList.contains('hidden')) {
+                    startGame();
+                } else {
+                    switchLane();
+                }
+            }
+        });
+
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if (!gameState.isPlaying && startScreen.classList.contains('hidden')) {
+                startGame();
+            } else if (!gameState.isPlaying && !startScreen.classList.contains('hidden')) {
+                startGame();
+            } else {
+                switchLane();
+            }
+        });
+
+        canvas.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (gameState.isPlaying) {
+                switchLane();
+            }
+        });
+
+        startBtn.addEventListener('click', startGame);
+
+        function spawnDigit() {
+            const value = Math.random() > 0.5 ? 1 : 0;
+            const lane = Math.random() > 0.5 ? 1 : 0;
+            
+            gameState.digits.push({
+                value: value,
+                lane: lane,
+                y: -DIGIT_SIZE,
+                x: lane * LANE_WIDTH + LANE_WIDTH / 2,
+                checked: false
+            });
+        }
+
+        function createSwitchParticles() {
+            const x = gameState.playerLane * LANE_WIDTH + LANE_WIDTH / 2;
+            const y = PLAYER_Y;
+            
+            for (let i = 0; i < 10; i++) {
+                const angle = (Math.PI * 2 * i) / 10;
+                gameState.particles.push({
+                    x: x,
+                    y: y,
+                    vx: Math.cos(angle) * 3,
+                    vy: Math.sin(angle) * 3,
+                    life: 1,
+                    color: gameState.playerLane === 0 ? '#00ffff' : '#ffaa00'
+                });
+            }
+        }
+
+        function createMatchParticles(x, y, correct) {
+            const color = correct ? '#00ff41' : '#ff0055';
+            const count = correct ? 20 : 30;
+            
+            for (let i = 0; i < count; i++) {
+                const angle = (Math.PI * 2 * i) / count;
+                gameState.particles.push({
+                    x: x,
+                    y: y,
+                    vx: Math.cos(angle) * (4 + Math.random() * 4),
+                    vy: Math.sin(angle) * (4 + Math.random() * 4),
+                    life: 1,
+                    color: color
+                });
+            }
+        }
+
+        function startGame() {
+            gameState = {
+                isPlaying: true,
+                score: 0,
+                combo: 0,
+                maxCombo: 0,
+                survivalTime: 0,
+                playerLane: 0,
+                digits: [],
+                particles: [],
+                speed: 200,
+                spawnTimer: 0,
+                spawnRate: 60,
+                screenShake: 0,
+                gridOffset: 0
+            };
+            
+            startScreen.classList.add('hidden');
+            gameOverScreen.classList.add('hidden');
+            scoreElement.textContent = '0';
+            comboElement.textContent = 'x0';
+            timeElement.textContent = '0s';
+            highScoreDisplay.textContent = highScore;
+            
+            // Spawn first few digits
+            setTimeout(() => spawnDigit(), 500);
+            setTimeout(() => spawnDigit(), 1500);
+            
+            gameLoop();
+        }
+
+        function updateGame(deltaTime) {
+            if (!gameState.isPlaying) return;
+
+            gameState.survivalTime += deltaTime;
+            timeElement.textContent = gameState.survivalTime.toFixed(1) + 's';
+            
+            // Update grid animation
+            gameState.gridOffset += gameState.speed * deltaTime;
+            if (gameState.gridOffset > 50) gameState.gridOffset = 0;
+
+            // Increase difficulty over time
+            const timeTier = Math.floor(gameState.survivalTime / 30);
+            gameState.speed = 200 + timeTier * 100;
+            gameState.spawnRate = Math.max(20, 60 - timeTier * 10);
+
+            // Spawn digits
+            gameState.spawnTimer++;
+            if (gameState.spawnTimer >= gameState.spawnRate) {
+                spawnDigit();
+                gameState.spawnTimer = 0;
+            }
+
+            // Update digits
+            for (let i = gameState.digits.length - 1; i >= 0; i--) {
+                const digit = gameState.digits[i];
+                digit.y += gameState.speed * deltaTime;
+
+                // Check collision
+                if (!digit.checked && digit.y >= PLAYER_Y - COLLISION_THRESHOLD && digit.y <= PLAYER_Y + COLLISION_THRESHOLD) {
+                    digit.checked = true;
+                    
+                    if (digit.lane === gameState.playerLane && digit.value === gameState.playerLane) {
+                        // CORRECT MATCH!
+                        gameState.combo++;
+                        gameState.maxCombo = Math.max(gameState.maxCombo, gameState.combo);
+                        
+                        let points = 10;
+                        if (gameState.combo >= 50) points *= 10;
+                        else if (gameState.combo >= 25) points *= 5;
+                        else if (gameState.combo >= 10) points *= 3;
+                        else if (gameState.combo >= 5) points *= 2;
+                        
+                        gameState.score += points;
+                        scoreElement.textContent = gameState.score;
+                        comboElement.textContent = 'x' + gameState.combo;
+                        
+                        createMatchParticles(digit.x, digit.y, true);
+                        playSound(400 + gameState.combo * 20, 0.1, 'sine');
+                        
+                        // Combo milestone sounds
+                        if (gameState.combo % 10 === 0) {
+                            playSound(1000, 0.2, 'triangle');
+                        }
+                    } else {
+                        // WRONG MATCH - GAME OVER
+                        createMatchParticles(digit.x, digit.y, false);
+                        gameState.screenShake = 40;
+                        playSound(100, 0.5, 'sawtooth');
+                        endGame();
+                        return;
+                    }
+                }
+
+                // Remove off-screen digits
+                if (digit.y > canvas.height + DIGIT_SIZE) {
+                    gameState.digits.splice(i, 1);
+                }
+            }
+
+            // Update particles
+            for (let i = gameState.particles.length - 1; i >= 0; i--) {
+                const p = gameState.particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.life -= 0.02;
+                p.vx *= 0.97;
+                p.vy *= 0.97;
+                
+                if (p.life <= 0) gameState.particles.splice(i, 1);
+            }
+
+            // Update screen shake
+            if (gameState.screenShake > 0) {
+                gameState.screenShake *= 0.85;
+            }
+
+            // Distance score
+            gameState.score += Math.floor(deltaTime);
+            scoreElement.textContent = gameState.score;
+        }
+
+        function drawGame() {
+            ctx.save();
+            
+            // Screen shake
+            if (gameState.screenShake > 0) {
+                ctx.translate(
+                    (Math.random() - 0.5) * gameState.screenShake,
+                    (Math.random() - 0.5) * gameState.screenShake
+                );
+            }
+            
+            // Background
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Grid floor effect
+            ctx.strokeStyle = 'rgba(0, 68, 102, 0.3)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < canvas.height + 50; i += 50) {
+                const y = (i + gameState.gridOffset) % (canvas.height + 50);
+                ctx.globalAlpha = 1 - (y / canvas.height) * 0.7;
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+            ctx.globalAlpha = 1;
+            
+            // Lane divider
+            ctx.strokeStyle = '#00ffff';
+            ctx.lineWidth = 2;
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = '#00ffff';
+            ctx.beginPath();
+            ctx.moveTo(canvas.width / 2, 0);
+            ctx.lineTo(canvas.width / 2, canvas.height);
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+            
+            // Lane highlights
+            const lane0Alpha = gameState.playerLane === 0 ? 0.2 : 0.05;
+            const lane1Alpha = gameState.playerLane === 1 ? 0.2 : 0.05;
+            
+            ctx.fillStyle = `rgba(0, 255, 255, ${lane0Alpha})`;
+            ctx.fillRect(0, 0, LANE_WIDTH, canvas.height);
+            
+            ctx.fillStyle = `rgba(255, 170, 0, ${lane1Alpha})`;
+            ctx.fillRect(LANE_WIDTH, 0, LANE_WIDTH, canvas.height);
+            
+            // Particles
+            gameState.particles.forEach(p => {
+                ctx.save();
+                ctx.globalAlpha = p.life;
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = p.color;
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            });
+            
+            // Binary digits
+            ctx.font = 'bold 60px "Share Tech Mono"';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            gameState.digits.forEach(digit => {
+                const color = digit.lane === 0 ? '#00ffff' : '#ffaa00';
+                const size = 60 - (digit.y / canvas.height) * 10; // Size decreases with distance
+                
+                ctx.save();
+                ctx.font = `bold ${size}px "Share Tech Mono"`;
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = color;
+                ctx.fillStyle = color;
+                ctx.fillText(digit.value, digit.x, digit.y);
+                
+                // Motion blur trail
+                ctx.globalAlpha = 0.3;
+                ctx.fillText(digit.value, digit.x, digit.y - 15);
+                ctx.globalAlpha = 0.15;
+                ctx.fillText(digit.value, digit.x, digit.y - 30);
+                ctx.restore();
+            });
+            
+            // Player
+            const playerX = gameState.playerLane * LANE_WIDTH + LANE_WIDTH / 2;
+            const playerColor = gameState.playerLane === 0 ? '#00ffff' : '#ffaa00';
+            const playerSize = 25;
+            
+            // Player glow
+            ctx.shadowBlur = 40;
+            ctx.shadowColor = playerColor;
+            
+            // Player diamond shape
+            ctx.fillStyle = playerColor;
+            ctx.beginPath();
+            ctx.moveTo(playerX, PLAYER_Y - playerSize);
+            ctx.lineTo(playerX + playerSize, PLAYER_Y);
+            ctx.lineTo(playerX, PLAYER_Y + playerSize);
+            ctx.lineTo(playerX - playerSize, PLAYER_Y);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Player core
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(playerX, PLAYER_Y, 8, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Lane indicators at bottom
+            ctx.shadowBlur = 0;
+            ctx.font = 'bold 20px "Share Tech Mono"';
+            ctx.fillStyle = '#00ffff';
+            ctx.fillText('LANE 0', LANE_WIDTH / 2, canvas.height - 20);
+            ctx.fillStyle = '#ffaa00';
+            ctx.fillText('LANE 1', LANE_WIDTH + LANE_WIDTH / 2, canvas.height - 20);
+            
+            ctx.restore();
+        }
+
+        function endGame() {
+            gameState.isPlaying = false;
+            finalScoreElement.textContent = gameState.score;
+            finalComboElement.textContent = 'x' + gameState.maxCombo;
+            survivalTimeElement.textContent = gameState.survivalTime.toFixed(1) + 's';
+            
+            if (gameState.score > highScore) {
+                highScore = gameState.score;
+                localStorage.setItem('codeRunnerHighScore', highScore);
+            }
+            highScoreDisplay.textContent = highScore;
+            
+            setTimeout(() => {
+                gameOverScreen.classList.remove('hidden');
+            }, 200);
+        }
+
+        let lastTime = 0;
+        function gameLoop(currentTime = 0) {
+            if (!gameState.isPlaying) return;
+            
+            const deltaTime = (currentTime - lastTime) / 1000;
+            lastTime = currentTime;
+            
+            if (deltaTime < 0.1) { // Cap delta time to avoid huge jumps
+                updateGame(deltaTime);
+            }
+            drawGame();
+            
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Initialize
+        highScoreDisplay.textContent = highScore;
+        
+        // Draw initial state
+        ctx.fillStyle = '#000';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.strokeStyle = '#00ffff';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(canvas.width / 2, 0);
+        ctx.lineTo(canvas.width / 2, canvas.height);
+        ctx.stroke();
+    </script>
+</body>
+</html>
