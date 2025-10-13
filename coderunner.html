@@ -368,11 +368,11 @@
             if (lane === 0) {
                 // LEFT LANE (cyan) - spawn 0
                 value = 0;
-                xPos = 100; // Explicit: Left lane center
+                xPos = LANE_WIDTH / 2; // Left lane center (175 for 700px canvas)
             } else if (lane === 1) {
                 // RIGHT LANE (orange) - spawn 1
                 value = 1;
-                xPos = 300; // Explicit: Right lane center
+                xPos = LANE_WIDTH + LANE_WIDTH / 2; // Right lane center (525 for 700px canvas)
             }
             
             // DEBUG: Log what we're spawning
