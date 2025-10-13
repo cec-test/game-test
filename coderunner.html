@@ -401,7 +401,8 @@
                 spawnTimer: 0,
                 spawnRate: 60,
                 screenShake: 0,
-                gridOffset: 0
+                gridOffset: 0,
+                initialDelay: 3.0 // 3 second delay before spawning starts
             };
             
             startScreen.classList.add('hidden');
@@ -410,10 +411,6 @@
             comboElement.textContent = 'x0';
             timeElement.textContent = '0s';
             highScoreDisplay.textContent = highScore;
-            
-            // Spawn first few digits
-            setTimeout(() => spawnDigit(), 500);
-            setTimeout(() => spawnDigit(), 1500);
             
             gameLoop();
         }
