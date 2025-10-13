@@ -555,26 +555,23 @@
                 }
             });
 
-            // Draw exit
+            // Draw exit (always visible as yellow beacon)
             if (gameState.exitPos) {
-                const dx = gameState.exitPos.x - playerTileX;
-                const dy = gameState.exitPos.y - playerTileY;
-                const dist = Math.sqrt(dx * dx + dy * dy);
-                
-                if (dist <= LIGHT_RADIUS + 1) {
-                    ctx.save();
-                    ctx.globalAlpha = Math.max(0, 1 - dist / 4);
-                    ctx.fillStyle = '#ffd700';
-                    ctx.shadowBlur = 30;
-                    ctx.shadowColor = '#ffd700';
-                    ctx.fillRect(
-                        gameState.exitPos.x * TILE_SIZE + 6,
-                        gameState.exitPos.y * TILE_SIZE + 6,
-                        TILE_SIZE - 12,
-                        TILE_SIZE - 12
-                    );
-                    ctx.restore();
-                }
+                ctx.save();
+                ctx.fillStyle = '#ffd700';
+                ctx.shadowBlur = 40;
+                ctx.shadowColor = '#ffd700';
+                ctx.globalAlpha = 0.8 + Math.sin(Date.now() / 300) * 0.2; // Pulsing
+                ctx.beginPath();
+                ctx.arc(
+                    gameState.exitPos.x * TILE_SIZE + TILE_SIZE / 2,
+                    gameState.exitPos.y * TILE_SIZE + TILE_SIZE / 2,
+                    12,
+                    0,
+                    Math.PI * 2
+                );
+                ctx.fill();
+                ctx.restore();
             }
 
             // Draw player (stick figure)
