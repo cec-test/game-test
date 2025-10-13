@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>HORDE</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght:900&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Orbitron', sans-serif;
+            background: linear-gradient(to bottom, #2c1810, #1a0f08);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+            touch-action: none;
+        }
+
+        .container {
+            text-align: center;
+            padding: 10px;
+            position: relative;
+        }
+
+        h1 {
+            font-size: 3.5em;
+            margin-bottom: 15px;
+            letter-spacing: 15px;
+            background: linear-gradient(90deg, #8b0000, #ff0000, #8b0000);
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradientShift 3s ease infinite;
+            font-weight: 900;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .game-wrapper {
+            position: relative;
+            display: inline-block;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #3d2817;
+            box-shadow: 0 0 50px rgba(139, 0, 0, 0.6);
+        }
+
+        #gameCanvas {
+            display: block;
+            border: 4px solid #8b4513;
+            cursor: crosshair;
+        }
+
+        .crosshair {
+            position: fixed;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 0, 0, 0.8);
+            border-radius: 50%;
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+            display: none;
+            z-index: 1000;
+        }
+
+        .crosshair::before,
+        .crosshair::after {
+            content: '';
+            position: absolute;
+            background: rgba(255, 0, 0, 0.8);
+        }
+
+        .crosshair::before {
+            width: 2px;
+            height: 10px;
+            left: 50%;
+            top: -5px;
+            transform: translateX(-50%);
+        }
+
+        .crosshair::after {
+            width: 10px;
+            height: 2px;
+            top: 50%;
+            left: -5px;
+            transform: translateY(-50%);
+        }
+
+        .info-bar {
+            margin-top: 15px;
+            display: flex;
+            justify-content: space-around;
+            gap: 15px;
+        }
+
+        .info-item {
+            font-size: 1.1em;
+            font-weight: 900;
+            color: #8b0000;
+            text-shadow: 0 0 10px rgba(139, 0, 0, 0.8);
+        }
+
+        .info-item span {
+            color: #ff0000;
+        }
+
+        .game-over, .start-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            color: white;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .game-over h2, .start-screen h2 {
+            font-size: 3em;
+            color: #ff0000;
+            text-shadow: 0 0 30px rgba(255, 0, 0, 0.8);
+            margin-bottom: 20px;
+        }
+
+        .game-over p, .start-screen p {
+            font-size: 1.1em;
+            margin: 8px 0;
+            color: #fff;
+        }
+
+        .start-screen .instructions {
+            max-width: 350px;
+            line-height: 1.6;
+            margin: 15px;
+            font-size: 0.9em;
+        }
+
+        button {
+            margin: 15px 10px;
+            padding: 18px 50px;
+            font-size: 1.4em;
+            font-weight: 900;
+            font-family: 'Orbitron', sans-serif;
+            background: #ff0000;
+            color: #fff;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 0 40px rgba(255, 0, 0, 0.6);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+
+        button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 60px rgba(255, 0, 0, 1);
+        }
+
+        .button-secondary {
+            background: #333;
+            color: #ff0000;
+            padding: 12px 30px;
+            font-size: 1em;
+        }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 2em; letter-spacing: 10px; }
+            .info-item { font-size: 1em; }
+            button { padding: 15px 35px; font-size: 1.2em; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>HORDE</h1>
+        <div class="game-wrapper">
+            <canvas id="gameCanvas" width="400" height="600"></canvas>
+            <div class="crosshair" id="crosshair"></div>
+            
+            <div id="startScreen" class="start-screen">
+                <h2>🧟 HORDE 🧟</h2>
+                <div class="instructions">
+                    <p><strong>DEFEND THE TOWER!</strong></p>
+                    <p>Zombies come from both sides. Don't let them reach you!</p>
+                    <p><br><strong>Controls:</strong></p>
+                    <p>🖱️ Desktop: Aim with mouse, SPACE to shoot</p>
+                    <p>📱 Mobile: Tap to aim and shoot</p>
+                    <p><br>Normal zombies: 3 shots</p>
+                    <p>Armored zombies (after 1min): 10 shots</p>
+                </div>
+                <button onclick="startGame()">⚡ START ⚡</button>
+                <button class="button-secondary" onclick="window.location.href='index.html'">◀ BACK</button>
+            </div>
+
+            <div id="gameOver" class="game-over hidden">
+                <h2>GAME OVER</h2>
+                <p>Survived: <span id="finalTime" style="color: #ff0000;">0</span>s</p>
+                <p>Kills: <span id="finalKills" style="color: #ff0000;">0</span></p>
+                <p>Score: <span id="finalScore" style="color: #ff0000;">0</span></p>
+                <button onclick="restartGame()">🔄 RETRY 🔄</button>
+                <button class="button-secondary" onclick="window.location.href='index.html'">◀ BACK TO MENU</button>
+            </div>
+        </div>
+        <div class="info-bar">
+            <div class="info-item">AMMO: <span id="ammo">100</span></div>
+            <div class="info-item">TIME: <span id="time">0s</span></div>
+            <div class="info-item">KILLS: <span id="kills">0</span></div>
+            <div class="info-item">SCORE: <span id="score">0</span></div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const crosshair = document.getElementById('crosshair');
+
+        let gameActive = false;
+        let gameTime = 0;
+        let kills = 0;
+        let score = 0;
+        let ammo = 100;
+        let maxAmmo = 100;
+        let isReloading = false;
+        let reloadTime = 0;
+        let reloadDuration = 3000;
+
+        let mouseX = canvas.width / 2;
+        let mouseY = canvas.height / 2;
+
+        const tower = {
+            x: canvas.width / 2,
+            baseY: canvas.height - 60,
+            topY: 100,
+            width: 30,
+            playerY: 80
+        };
+
+        let zombies = [];
+        let bullets = [];
+        let particles = [];
+        let spawnTimer = 0;
+        let spawnInterval = 1000;
+
+        const ZOMBIE_NORMAL = 'normal';
+        const ZOMBIE_ARMORED = 'armored';
+
+        class Zombie {
+            constructor(side) {
+                this.side = side;
+                this.x = side === 'left' ? 30 : canvas.width - 30;
+                this.y = canvas.height - 40;
+                this.width = 20;
+                this.height = 28;
+                this.speed = 0.4 + Math.random() * 0.2;
+                this.targetX = side === 'left' ? tower.x - 20 : tower.x + 20;
+                this.isWalking = true;
+                this.isClimbing = false;
+                this.climbLevel = 0;
+                this.climbPosition = 0;
+                
+                this.type = gameTime > 60000 ? 
+                    (Math.random() < 0.3 ? ZOMBIE_ARMORED : ZOMBIE_NORMAL) : 
+                    ZOMBIE_NORMAL;
+                
+                this.health = this.type === ZOMBIE_NORMAL ? 3 : 10;
+                this.maxHealth = this.health;
+            }
+
+            update(deltaTime) {
+                if (this.isWalking) {
+                    const direction = this.side === 'left' ? 1 : -1;
+                    this.x += this.speed * direction * deltaTime / 16;
+
+                    const reachedTower = this.side === 'left' ? 
+                        this.x >= this.targetX : 
+                        this.x <= this.targetX;
+
+                    if (reachedTower) {
+                        this.isWalking = false;
+                        this.isClimbing = true;
+                        this.x = this.targetX;
+                    }
+                }
+
+                if (this.isClimbing) {
+                    this.updateClimbPosition();
+                }
+            }
+
+            updateClimbPosition() {
+                const sideZombies = zombies.filter(z => z.side === this.side && z.isClimbing);
+                const myIndex = sideZombies.indexOf(this);
+                
+                let level = 0;
+                let position = 0;
+                let counted = 0;
+                
+                for (let lvl = 0; lvl < 5; lvl++) {
+                    const zombiesAtLevel = 5 - lvl;
+                    if (myIndex < counted + zombiesAtLevel) {
+                        level = lvl;
+                        position = myIndex - counted;
+                        break;
+                    }
+                    counted += zombiesAtLevel;
+                }
+
+                this.climbLevel = level;
+                this.climbPosition = position;
+
+                if (this.climbLevel >= 4) {
+                    endGame();
+                    return;
+                }
+
+                this.y = canvas.height - 40 - (this.climbLevel * 30);
+                const zombiesAtThisLevel = 5 - this.climbLevel;
+                const levelWidth = zombiesAtThisLevel * this.width;
+                const startX = this.targetX - levelWidth / 2;
+                this.x = startX + (this.climbPosition * this.width) + this.width / 2;
+            }
+
+            hit() {
+                this.health--;
+                return this.health <= 0;
+            }
+
+            draw() {
+                ctx.fillStyle = this.type === ZOMBIE_ARMORED ? '#555' : '#4a7c59';
+                ctx.fillRect(this.x - this.width/2, this.y - this.height, this.width, this.height);
+
+                ctx.fillStyle = this.type === ZOMBIE_ARMORED ? '#777' : '#6b8e6b';
+                ctx.fillRect(this.x - 8, this.y - this.height - 10, 16, 10);
+
+                ctx.fillStyle = '#ff0000';
+                ctx.fillRect(this.x - 6, this.y - this.height - 6, 3, 3);
+                ctx.fillRect(this.x + 3, this.y - this.height - 6, 3, 3);
+
+                if (this.type === ZOMBIE_ARMORED) {
+                    ctx.strokeStyle = '#999';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(this.x - this.width/2, this.y - this.height, this.width, this.height);
+                }
+            }
+        }
+
+        class Bullet {
+            constructor(startX, startY, targetX, targetY) {
+                this.x = startX;
+                this.y = startY;
+                this.speed = 12;
+                
+                const dx = targetX - startX;
+                const dy = targetY - startY;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                this.vx = (dx / distance) * this.speed;
+                this.vy = (dy / distance) * this.speed;
+                
+                this.radius = 3;
+                this.active = true;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+
+                if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) {
+                    this.active = false;
+                }
+
+                for (let i = zombies.length - 1; i >= 0; i--) {
+                    const zombie = zombies[i];
+                    const dx = this.x - zombie.x;
+                    const dy = this.y - (zombie.y - zombie.height / 2);
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+
+                    if (distance < zombie.width / 2 + this.radius) {
+                        this.active = false;
+                        createBloodParticles(this.x, this.y);
+                        
+                        if (zombie.hit()) {
+                            kills++;
+                            score += zombie.type === ZOMBIE_ARMORED ? 20 : 10;
+                            
+                            if (zombie.isClimbing) {
+                                zombies.forEach(z => {
+                                    if (z.side === zombie.side && 
+                                        z.isClimbing && 
+                                        z.climbLevel > zombie.climbLevel) {
+                                        z.isClimbing = false;
+                                        z.isWalking = true;
+                                    }
+                                });
+                            }
+                            
+                            zombies.splice(i, 1);
+                        }
+                        break;
+                    }
+                }
+            }
+
+            draw() {
+                ctx.fillStyle = '#000';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.vx = (Math.random() - 0.5) * 3;
+                this.vy = (Math.random() - 0.5) * 3 - 1;
+                this.life = 1.0;
+                this.decay = 0.02;
+                this.color = color;
+                this.size = Math.random() * 2 + 1;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vy += 0.15;
+                this.life -= this.decay;
+            }
+
+            draw() {
+                ctx.globalAlpha = this.life;
+                ctx.fillStyle = this.color;
+                ctx.fillRect(this.x, this.y, this.size, this.size);
+                ctx.globalAlpha = 1.0;
+            }
+        }
+
+        function createBloodParticles(x, y) {
+            for (let i = 0; i < 6; i++) {
+                particles.push(new Particle(x, y, '#8b0000'));
+            }
+        }
+
+        function spawnZombie() {
+            const side = Math.random() < 0.5 ? 'left' : 'right';
+            zombies.push(new Zombie(side));
+        }
+
+        function shoot() {
+            if (!gameActive || isReloading || ammo <= 0) return;
+            
+            ammo--;
+            bullets.push(new Bullet(tower.x, tower.playerY, mouseX, mouseY));
+
+            if (ammo === 0) {
+                startReload();
+            }
+            updateUI();
+        }
+
+        function startReload() {
+            isReloading = true;
+            reloadTime = 0;
+        }
+
+        function updateReload(deltaTime) {
+            if (!isReloading) return;
+            reloadTime += deltaTime;
+            if (reloadTime >= reloadDuration) {
+                isReloading = false;
+                ammo = maxAmmo;
+                updateUI();
+            }
+        }
+
+        function updateUI() {
+            document.getElementById('ammo').textContent = isReloading ? 'RELOAD' : ammo;
+            document.getElementById('time').textContent = Math.floor(gameTime / 1000) + 's';
+            document.getElementById('kills').textContent = kills;
+            document.getElementById('score').textContent = score;
+        }
+
+        function drawTower() {
+            const gradient = ctx.createLinearGradient(tower.x, tower.topY, tower.x, tower.baseY);
+            gradient.addColorStop(0, '#8b4513');
+            gradient.addColorStop(1, '#654321');
+            
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.moveTo(tower.x - 12, tower.topY);
+            ctx.lineTo(tower.x + 12, tower.topY);
+            ctx.lineTo(tower.x + tower.width/2, tower.baseY);
+            ctx.lineTo(tower.x - tower.width/2, tower.baseY);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.fillStyle = '#654321';
+            ctx.fillRect(tower.x - 25, tower.playerY - 8, 50, 12);
+
+            ctx.fillStyle = '#0066cc';
+            ctx.fillRect(tower.x - 8, tower.playerY - 25, 16, 17);
+            
+            ctx.fillStyle = '#ffdbac';
+            ctx.fillRect(tower.x - 7, tower.playerY - 35, 14, 10);
+
+            const angle = Math.atan2(mouseY - tower.playerY, mouseX - tower.x);
+            ctx.save();
+            ctx.translate(tower.x, tower.playerY - 17);
+            ctx.rotate(angle);
+            ctx.fillStyle = '#333';
+            ctx.fillRect(0, -2, 20, 4);
+            ctx.restore();
+        }
+
+        function drawGround() {
+            ctx.fillStyle = '#2d1f10';
+            ctx.fillRect(0, canvas.height - 50, canvas.width, 50);
+            ctx.fillStyle = '#1a3d1a';
+            ctx.fillRect(0, canvas.height - 53, canvas.width, 3);
+        }
+
+        function drawBackground() {
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, '#1a1a2e');
+            gradient.addColorStop(1, '#16213e');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = '#e0e0e0';
+            ctx.beginPath();
+            ctx.arc(330, 80, 35, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        let lastTime = 0;
+        function gameLoop(currentTime) {
+            if (!lastTime) lastTime = currentTime;
+            const deltaTime = currentTime - lastTime;
+            lastTime = currentTime;
+
+            if (!gameActive) {
+                requestAnimationFrame(gameLoop);
+                return;
+            }
+
+            gameTime += deltaTime;
+            score += Math.floor(deltaTime / 100);
+            
+            const difficultyMultiplier = 1 + (gameTime / 120000);
+            spawnInterval = 1000 / difficultyMultiplier;
+
+            spawnTimer += deltaTime;
+            if (spawnTimer >= spawnInterval) {
+                spawnZombie();
+                spawnTimer = 0;
+            }
+
+            updateReload(deltaTime);
+            zombies.forEach(zombie => zombie.update(deltaTime));
+            bullets = bullets.filter(bullet => {
+                bullet.update();
+                return bullet.active;
+            });
+            particles = particles.filter(particle => {
+                particle.update();
+                return particle.life > 0;
+            });
+
+            updateUI();
+
+            drawBackground();
+            drawGround();
+            drawTower();
+            zombies.forEach(zombie => zombie.draw());
+            bullets.forEach(bullet => bullet.draw());
+            particles.forEach(particle => particle.draw());
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        function startGame() {
+            document.getElementById('startScreen').classList.add('hidden');
+            crosshair.style.display = 'block';
+            gameActive = true;
+            gameTime = 0;
+            kills = 0;
+            score = 0;
+            ammo = maxAmmo;
+            isReloading = false;
+            zombies = [];
+            bullets = [];
+            particles = [];
+            spawnTimer = 0;
+            lastTime = 0;
+            updateUI();
+        }
+
+        function endGame() {
+            gameActive = false;
+            document.getElementById('finalTime').textContent = Math.floor(gameTime / 1000);
+            document.getElementById('finalKills').textContent = kills;
+            document.getElementById('finalScore').textContent = score;
+            document.getElementById('gameOver').classList.remove('hidden');
+            crosshair.style.display = 'none';
+        }
+
+        function restartGame() {
+            document.getElementById('gameOver').classList.add('hidden');
+            startGame();
+        }
+
+        document.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            mouseX = (e.clientX - rect.left) * (canvas.width / rect.width);
+            mouseY = (e.clientY - rect.top) * (canvas.height / rect.height);
+            crosshair.style.left = e.clientX + 'px';
+            crosshair.style.top = e.clientY + 'px';
+        });
+
+        canvas.addEventListener('mouseenter', () => {
+            if (gameActive) crosshair.style.display = 'block';
+        });
+
+        canvas.addEventListener('mouseleave', () => {
+            crosshair.style.display = 'none';
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' && gameActive && !isReloading) {
+                e.preventDefault();
+                shoot();
+            }
+        });
+
+        let touchInterval;
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if (!gameActive) return;
+            
+            const rect = canvas.getBoundingClientRect();
+            const touch = e.touches[0];
+            mouseX = (touch.clientX - rect.left) * (canvas.width / rect.width);
+            mouseY = (touch.clientY - rect.top) * (canvas.height / rect.height);
+            
+            shoot();
+            touchInterval = setInterval(() => {
+                if (gameActive && !isReloading) shoot();
+            }, 150);
+        });
+
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            const touch = e.touches[0];
+            mouseX = (touch.clientX - rect.left) * (canvas.width / rect.width);
+            mouseY = (touch.clientY - rect.top) * (canvas.height / rect.height);
+        });
+
+        canvas.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            clearInterval(touchInterval);
+        });
+
+        requestAnimationFrame(gameLoop);
+    </script>
+</body>
+</html>
