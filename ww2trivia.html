@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>WWII TRIVIA</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@900&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Orbitron', sans-serif;
+            background: linear-gradient(135deg, #1a1a1a, #2d2d2d);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+            touch-action: none;
+        }
+
+        .container {
+            text-align: center;
+            padding: 0;
+            position: relative;
+            width: 100%;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 0;
+            letter-spacing: 15px;
+            background: linear-gradient(90deg, #c9b037, #fff, #c9b037);
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradientShift 3s ease infinite;
+            font-weight: 900;
+            filter: drop-shadow(0 0 30px rgba(201, 176, 55, 0.8));
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .game-wrapper {
+            position: relative;
+            display: inline-block;
+            width: 700px;
+            height: 900px;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #1a1a1a;
+            box-shadow: 0 0 50px rgba(201, 176, 55, 0.4);
+            border: 4px solid #c9b037;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+        }
+
+        .question-number {
+            font-size: 1.2em;
+            color: #888;
+            margin-bottom: 20px;
+        }
+
+        .difficulty-indicator {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 20px;
+        }
+
+        .difficulty-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #333;
+            border: 2px solid #c9b037;
+        }
+
+        .difficulty-dot.active {
+            background: #c9b037;
+            box-shadow: 0 0 10px #c9b037;
+        }
+
+        .question-text {
+            font-size: 1.8em;
+            color: #fff;
+            margin-bottom: 40px;
+            line-height: 1.4;
+            max-width: 600px;
+        }
+
+        #answerInput {
+            width: 90%;
+            max-width: 500px;
+            padding: 20px;
+            font-size: 1.3em;
+            font-family: 'Orbitron', sans-serif;
+            background: rgba(255, 255, 255, 0.1);
+            border: 3px solid #c9b037;
+            border-radius: 10px;
+            color: #fff;
+            text-align: center;
+            margin-bottom: 30px;
+            outline: none;
+        }
+
+        #answerInput::placeholder {
+            color: #666;
+        }
+
+        .feedback {
+            font-size: 2em;
+            font-weight: 900;
+            margin-bottom: 20px;
+            min-height: 60px;
+        }
+
+        .feedback.correct {
+            color: #00ff00;
+            text-shadow: 0 0 20px #00ff00;
+        }
+
+        .feedback.wrong {
+            color: #ff0000;
+            text-shadow: 0 0 20px #ff0000;
+        }
+
+        .correct-answer {
+            font-size: 1.3em;
+            color: #00ff00;
+            margin-bottom: 20px;
+        }
+
+        button {
+            margin: 10px;
+            padding: 18px 50px;
+            font-size: 1.4em;
+            font-weight: 900;
+            font-family: 'Orbitron', sans-serif;
+            background: #c9b037;
+            color: #000;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 0 40px rgba(201, 176, 55, 0.6);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+
+        button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 60px rgba(201, 176, 55, 1);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .button-secondary {
+            background: #333;
+            color: #c9b037;
+            padding: 12px 30px;
+            font-size: 1em;
+        }
+
+        .score-display {
+            font-size: 1.2em;
+            color: #c9b037;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px rgba(201, 176, 55, 0.5);
+        }
+
+        .start-screen, .final-screen {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .final-screen h2 {
+            font-size: 3em;
+            background: linear-gradient(90deg, #c9b037, #fff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 30px;
+        }
+
+        .final-screen .result {
+            font-size: 2.5em;
+            color: #00ff00;
+            margin: 20px 0;
+            text-shadow: 0 0 20px #00ff00;
+        }
+
+        .final-screen .score {
+            font-size: 2em;
+            color: #c9b037;
+            margin: 10px 0;
+        }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 2em; letter-spacing: 10px; }
+            .question-text { font-size: 1.3em; }
+            #answerInput { font-size: 1.1em; }
+            button { padding: 15px 35px; font-size: 1.2em; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>WWII TRIVIA</h1>
+        <div class="game-wrapper">
+            <div id="startScreen" class="start-screen">
+                <h2 style="font-size: 3em; color: #c9b037; margin-bottom: 30px;">🪖 WWII TRIVIA 🪖</h2>
+                <p style="font-size: 1.2em; color: #fff; margin: 15px 0;">Test your World War II knowledge!</p>
+                <p style="font-size: 1em; color: #888; margin: 10px 0;">10 Random Questions</p>
+                <p style="font-size: 1em; color: #888; margin: 10px 0;">Points = 10 × Difficulty</p>
+                <button onclick="startGame()">⚡ START QUIZ ⚡</button>
+                <button class="button-secondary" onclick="window.location.href='index.html'">◀ BACK</button>
+            </div>
+
+            <div id="gameScreen" class="hidden">
+                <div class="question-number" id="questionNumber">Question 1/10</div>
+                <div class="difficulty-indicator" id="difficultyIndicator"></div>
+                <div class="question-text" id="questionText"></div>
+                <input type="text" id="answerInput" placeholder="Type your answer here..." autocomplete="off">
+                <button id="submitBtn" onclick="submitAnswer()">SUBMIT</button>
+                <div class="feedback" id="feedback"></div>
+                <div class="correct-answer" id="correctAnswer"></div>
+                <button id="nextBtn" class="hidden" onclick="nextQuestion()">NEXT ➜</button>
+                <div class="score-display">SCORE: <span id="currentScore">0</span></div>
+            </div>
+
+            <div id="finalScreen" class="final-screen hidden">
+                <h2>QUIZ COMPLETE!</h2>
+                <div class="result" id="finalResult">8/10 CORRECT</div>
+                <div class="score">TOTAL SCORE: <span id="finalScore" style="color: #00ff00;">0</span></div>
+                <button onclick="restartGame()">🔄 PLAY AGAIN 🔄</button>
+                <button class="button-secondary" onclick="window.location.href='index.html'">◀ BACK TO MENU</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const QUESTIONS = [
+            // Difficulty 1
+            { q: "In what year did World War II begin?", a: "1939", d: 1 },
+            { q: "Who was the leader of Nazi Germany during World War II?", a: "Adolf Hitler", d: 1 },
+            { q: "Which countries made up the main Allied Powers?", a: "United States, United Kingdom, Soviet Union", d: 1 },
+            { q: "What event caused the United States to enter World War II?", a: "Attack on Pearl Harbor", d: 1 },
+            { q: "Who was the British Prime Minister during most of World War II?", a: "Winston Churchill", d: 1 },
+            { q: "What was the name of Germany's air force during World War II?", a: "Luftwaffe", d: 1 },
+            { q: "Which country was invaded by Germany to start World War II?", a: "Poland", d: 1 },
+            { q: "What were the two opposing military alliances in World War II?", a: "Allies and Axis", d: 1 },
+            { q: "What city was the first atomic bomb dropped on?", a: "Hiroshima", d: 1 },
+            { q: "Who was the U.S. President for most of World War II?", a: "Franklin D. Roosevelt", d: 1 },
+            { q: "What was the main Axis Power in Asia?", a: "Japan", d: 1 },
+            { q: "Which beach was one of the landing sites on D-Day?", a: "Omaha Beach", d: 1 },
+            { q: "What was the Holocaust?", a: "The genocide of Jews and other groups by Nazi Germany", d: 1 },
+            { q: "What year did World War II end?", a: "1945", d: 1 },
+            { q: "What was Germany's political party under Hitler called?", a: "Nazi Party", d: 1 },
+            { q: "What was the codename for the Allied invasion of Normandy?", a: "Operation Overlord", d: 1 },
+            { q: "Which U.S. general led Allied forces in Europe?", a: "Dwight D. Eisenhower", d: 1 },
+            { q: "Which two Japanese cities were hit with atomic bombs?", a: "Hiroshima and Nagasaki", d: 1 },
+            { q: "What was the symbol of the Nazi Party?", a: "Swastika", d: 1 },
+            { q: "Which country suffered the most military deaths in World War II?", a: "Soviet Union", d: 1 },
+            { q: "What was Japan's main attack strategy at Pearl Harbor?", a: "Surprise aerial attack", d: 1 },
+            { q: "What kind of camps did Nazis use for mass imprisonment?", a: "Concentration camps", d: 1 },
+            { q: "Who was the Italian dictator during World War II?", a: "Benito Mussolini", d: 1 },
+            { q: "What ocean did the Pacific War take place in?", a: "Pacific Ocean", d: 1 },
+            { q: "Which country did Hitler invade after Poland in 1940?", a: "France", d: 1 },
+            { q: "Who were the Axis Powers?", a: "Germany, Italy, Japan", d: 1 },
+            { q: "What was the main tank used by the Germans?", a: "Panzer", d: 1 },
+            { q: "What country did the U.S. drop atomic bombs on?", a: "Japan", d: 1 },
+            { q: "What was the largest amphibious invasion in history?", a: "D-Day (Normandy Invasion)", d: 1 },
+            { q: "Who were the leaders of the Big Three?", a: "Roosevelt, Churchill, Stalin", d: 1 },
+            
+            // Difficulty 2
+            { q: "What was the German military strategy of quick attacks called?", a: "Blitzkrieg", d: 2 },
+            { q: "What was the name of the Nazi plan to exterminate the Jews?", a: "The Final Solution", d: 2 },
+            { q: "What was the main fighter plane used by the British in the Battle of Britain?", a: "Spitfire", d: 2 },
+            { q: "Which battle is considered the turning point on the Eastern Front?", a: "Battle of Stalingrad", d: 2 },
+            { q: "What country did the Allies invade on D-Day?", a: "France", d: 2 },
+            { q: "What was the U.S. strategy called in the Pacific War?", a: "Island Hopping", d: 2 },
+            { q: "What was the name of Hitler's autobiography?", a: "Mein Kampf", d: 2 },
+            { q: "Who was Japan's Emperor during World War II?", a: "Hirohito", d: 2 },
+            { q: "Which battle was fought entirely in the air over Britain?", a: "Battle of Britain", d: 2 },
+            { q: "What was the German invasion of the Soviet Union called?", a: "Operation Barbarossa", d: 2 },
+            { q: "Which country did Germany annex before invading Poland?", a: "Czechoslovakia", d: 2 },
+            { q: "What was the main Allied conference held in 1945 called?", a: "Yalta Conference", d: 2 },
+            { q: "What was the name of the U.S. project to build the atomic bomb?", a: "Manhattan Project", d: 2 },
+            { q: "Which battle halted Japan's expansion in the Pacific?", a: "Battle of Midway", d: 2 },
+            { q: "Which general led the German Afrika Korps?", a: "Erwin Rommel", d: 2 },
+            { q: "What was the capital of Nazi Germany?", a: "Berlin", d: 2 },
+            { q: "Which French region was under Nazi puppet control?", a: "Vichy France", d: 2 },
+            { q: "What major event took place on June 6, 1944?", a: "D-Day Invasion", d: 2 },
+            { q: "What was the largest concentration camp?", a: "Auschwitz", d: 2 },
+            { q: "Who commanded the Allied forces in the Pacific?", a: "Douglas MacArthur", d: 2 },
+            { q: "Which battle was the last major German offensive?", a: "Battle of the Bulge", d: 2 },
+            { q: "What was the German code machine called?", a: "Enigma", d: 2 },
+            { q: "Who led the Free French Forces?", a: "Charles de Gaulle", d: 2 },
+            { q: "Which U.S. general said 'I shall return'?", a: "Douglas MacArthur", d: 2 },
+            { q: "What ship was sunk at Pearl Harbor and remains a memorial?", a: "USS Arizona", d: 2 },
+            { q: "What was Hitler's private guard called?", a: "SS (Schutzstaffel)", d: 2 },
+            { q: "Who was the U.S. President who authorized atomic bomb use?", a: "Harry S. Truman", d: 2 },
+            { q: "What was the U.S. naval base attacked by Japan in 1941?", a: "Pearl Harbor", d: 2 },
+            { q: "Which city was firebombed in Germany in 1945?", a: "Dresden", d: 2 },
+            { q: "What was the name of the German parliament building destroyed by fire in 1933?", a: "Reichstag", d: 2 },
+            
+            // Difficulty 3
+            { q: "What was the codename for the German invasion of France in 1940?", a: "Fall Gelb", d: 3 },
+            { q: "What was the first major defeat for Germany in the Soviet Union?", a: "Battle of Moscow", d: 3 },
+            { q: "What was the codename for the Allied invasion of Italy?", a: "Operation Husky", d: 3 },
+            { q: "Which U.S. general led troops in North Africa?", a: "George S. Patton", d: 3 },
+            { q: "What was the last major battle of the Pacific War?", a: "Battle of Okinawa", d: 3 },
+            { q: "What German battleship was sunk by the British in 1941?", a: "Bismarck", d: 3 },
+            { q: "Who was the chief of the Luftwaffe?", a: "Hermann Göring", d: 3 },
+            { q: "What was the codename for Germany's invasion of Norway?", a: "Operation Weserübung", d: 3 },
+            { q: "Which island battle was the first Allied victory in the Pacific?", a: "Guadalcanal", d: 3 },
+            { q: "What was the conference that established post-war Europe?", a: "Potsdam Conference", d: 3 },
+            { q: "Which German general plotted to assassinate Hitler?", a: "Claus von Stauffenberg", d: 3 },
+            { q: "What was the codename for Hitler's plan to invade Britain?", a: "Operation Sea Lion", d: 3 },
+            { q: "Which British commander led forces in North Africa?", a: "Bernard Montgomery", d: 3 },
+            { q: "What was the last German offensive on the Western Front?", a: "Battle of the Bulge", d: 3 },
+            
+            // Difficulty 4
+            { q: "What was the codename for Germany's failed offensive in 1943 on the Eastern Front?", a: "Operation Citadel", d: 4 },
+            { q: "Which operation evacuated Allied troops from Dunkirk?", a: "Operation Dynamo", d: 4 },
+            { q: "What was the name of the Nazi Germany's rocket program leader?", a: "Wernher von Braun", d: 4 },
+            { q: "Which Soviet city was under siege for nearly 900 days?", a: "Leningrad", d: 4 },
+            { q: "What was the codename for the Allied deception before D-Day?", a: "Operation Bodyguard", d: 4 },
+            { q: "What conference discussed the unconditional surrender of Germany?", a: "Casablanca Conference", d: 4 },
+            { q: "Who was Hitler's propaganda minister?", a: "Joseph Goebbels", d: 4 },
+            { q: "Which country lost the highest number of civilians?", a: "Soviet Union", d: 4 },
+            { q: "What was the codename for Japan's plan to attack Midway?", a: "Operation MI", d: 4 },
+            { q: "What was the name of the German super-heavy tank prototype?", a: "Maus", d: 4 },
+            { q: "Which battle marked Germany's final defeat?", a: "Battle of Berlin", d: 4 },
+            { q: "What was the codename for the assassination attempt on Hitler?", a: "Operation Valkyrie", d: 4 },
+            { q: "Which American general commanded D-Day ground forces?", a: "Omar Bradley", d: 4 },
+            { q: "What was the Soviet counteroffensive at Stalingrad called?", a: "Operation Uranus", d: 4 },
+            { q: "Which naval battle involved the largest carrier engagement in history?", a: "Battle of the Philippine Sea", d: 4 },
+            
+            // Difficulty 5
+            { q: "What was the name of the secret German jet fighter project?", a: "Messerschmitt Me 262", d: 5 },
+            { q: "What was the name of the plan for Japan's defense against U.S. invasion?", a: "Operation Ketsugo", d: 5 },
+            { q: "Which German code name referred to the invasion of the Soviet Union's oil fields?", a: "Operation Blue", d: 5 },
+            { q: "Who led the Soviet NKVD during most of the war?", a: "Lavrentiy Beria", d: 5 },
+            { q: "What was the name of the Allied operation to cut off Japan's oil supply?", a: "Operation Starvation", d: 5 },
+            { q: "What was the name of Hitler's mountain retreat?", a: "The Berghof", d: 5 },
+            { q: "What was the codename for Japan's attack on the Philippines?", a: "Operation Z", d: 5 },
+            { q: "Which German general surrendered at Stalingrad?", a: "Friedrich Paulus", d: 5 },
+            { q: "What was the name of the German plan to kidnap the Pope?", a: "Operation Rabat", d: 5 },
+            { q: "Which operation planned the Allied invasion of southern France?", a: "Operation Dragoon", d: 5 }
+        ];
+
+        let currentQuestions = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let correctAnswers = 0;
+        let currentQuestion = null;
+
+        function selectQuestions() {
+            // Proportional distribution: 4 easy, 3 medium, 2 hard, 1 expert
+            const distribution = [
+                { difficulty: 1, count: 4 },
+                { difficulty: 2, count: 3 },
+                { difficulty: 3, count: 2 },
+                { difficulty: 4, count: 1 }
+            ];
+            
+            const selected = [];
+            distribution.forEach(({ difficulty, count }) => {
+                const pool = QUESTIONS.filter(q => q.d === difficulty);
+                for (let i = 0; i < count && pool.length > 0; i++) {
+                    const randomIndex = Math.floor(Math.random() * pool.length);
+                    selected.push(pool.splice(randomIndex, 1)[0]);
+                }
+            });
+            
+            // Shuffle the selected questions
+            return selected.sort(() => Math.random() - 0.5);
+        }
+
+        function startGame() {
+            currentQuestions = selectQuestions();
+            currentQuestionIndex = 0;
+            score = 0;
+            correctAnswers = 0;
+            
+            document.getElementById('startScreen').classList.add('hidden');
+            document.getElementById('gameScreen').classList.remove('hidden');
+            document.getElementById('finalScreen').classList.add('hidden');
+            
+            showQuestion();
+        }
+
+        function showQuestion() {
+            currentQuestion = currentQuestions[currentQuestionIndex];
+            
+            document.getElementById('questionNumber').textContent = `Question ${currentQuestionIndex + 1}/10`;
+            document.getElementById('questionText').textContent = currentQuestion.q;
+            document.getElementById('answerInput').value = '';
+            document.getElementById('answerInput').disabled = false;
+            document.getElementById('submitBtn').classList.remove('hidden');
+            document.getElementById('nextBtn').classList.add('hidden');
+            document.getElementById('feedback').textContent = '';
+            document.getElementById('feedback').className = 'feedback';
+            document.getElementById('correctAnswer').textContent = '';
+            document.getElementById('currentScore').textContent = score;
+            
+            // Show difficulty dots
+            const indicator = document.getElementById('difficultyIndicator');
+            indicator.innerHTML = '';
+            for (let i = 1; i <= 5; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'difficulty-dot';
+                if (i <= currentQuestion.d) dot.classList.add('active');
+                indicator.appendChild(dot);
+            }
+            
+            document.getElementById('answerInput').focus();
+        }
+
+        function normalizeAnswer(str) {
+            return str.toLowerCase()
+                .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, '')
+                .replace(/\s+/g, ' ')
+                .trim();
+        }
+
+        function submitAnswer() {
+            const userAnswer = document.getElementById('answerInput').value.trim();
+            if (!userAnswer) return;
+            
+            const normalizedUser = normalizeAnswer(userAnswer);
+            const normalizedCorrect = normalizeAnswer(currentQuestion.a);
+            
+            const isCorrect = normalizedUser === normalizedCorrect || 
+                            normalizedCorrect.includes(normalizedUser) ||
+                            normalizedUser.includes(normalizedCorrect);
+            
+            document.getElementById('answerInput').disabled = true;
+            document.getElementById('submitBtn').classList.add('hidden');
+            
+            if (isCorrect) {
+                const points = 10 * currentQuestion.d;
+                score += points;
+                correctAnswers++;
+                document.getElementById('feedback').textContent = `✓ CORRECT! +${points} pts`;
+                document.getElementById('feedback').className = 'feedback correct';
+            } else {
+                document.getElementById('feedback').textContent = '✗ WRONG';
+                document.getElementById('feedback').className = 'feedback wrong';
+                document.getElementById('correctAnswer').textContent = `Correct answer: ${currentQuestion.a}`;
+            }
+            
+            document.getElementById('currentScore').textContent = score;
+            document.getElementById('nextBtn').classList.remove('hidden');
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            
+            if (currentQuestionIndex >= currentQuestions.length) {
+                showFinalScreen();
+            } else {
+                showQuestion();
+            }
+        }
+
+        function showFinalScreen() {
+            document.getElementById('gameScreen').classList.add('hidden');
+            document.getElementById('finalScreen').classList.remove('hidden');
+            
+            document.getElementById('finalResult').textContent = `${correctAnswers}/10 CORRECT`;
+            document.getElementById('finalScore').textContent = score;
+            
+            if (correctAnswers === 10) {
+                document.getElementById('finalResult').style.color = '#ffd700';
+                document.getElementById('finalResult').textContent += ' - PERFECT!';
+            } else if (correctAnswers >= 7) {
+                document.getElementById('finalResult').style.color = '#00ff00';
+            } else if (correctAnswers >= 5) {
+                document.getElementById('finalResult').style.color = '#ffaa00';
+            } else {
+                document.getElementById('finalResult').style.color = '#ff0055';
+            }
+        }
+
+        function restartGame() {
+            startGame();
+        }
+
+        // Allow Enter key to submit
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                if (!document.getElementById('submitBtn').classList.contains('hidden')) {
+                    submitAnswer();
+                } else if (!document.getElementById('nextBtn').classList.contains('hidden')) {
+                    nextQuestion();
+                }
+            }
+        });
+    </script>
+</body>
+</html>

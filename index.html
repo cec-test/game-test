@@ -158,6 +158,12 @@
             --card-rgb: 139, 0, 0;
         }
 
+        .game-card.ww2trivia {
+            --card-color1: #c9b037;
+            --card-color2: #fff;
+            --card-rgb: 201, 176, 55;
+        }
+
         .game-icon {
             font-size: 8em;
             margin-bottom: 20px;
@@ -238,6 +244,13 @@
 
         .game-card.horde .game-title {
             background: linear-gradient(90deg, #8b0000, #ff0000);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .game-card.ww2trivia .game-title {
+            background: linear-gradient(90deg, #c9b037, #fff, #c9b037);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -386,6 +399,17 @@
                     Don't let them climb!
                 </div>
                 <a href="horde.html" class="play-btn">▶ PLAY</a>
+            </div>
+
+            <!-- WWII Trivia Card -->
+            <div class="game-card ww2trivia" onclick="window.location.href='ww2trivia.html'">
+                <div class="game-icon">🪖</div>
+                <div class="game-title">WWII TRIVIA</div>
+                <div class="game-desc">
+                    Test your World War II knowledge.
+                    10 questions. Can you ace it?
+                </div>
+                <a href="ww2trivia.html" class="play-btn">▶ PLAY</a>
             </div>
         </div>
     </div>
