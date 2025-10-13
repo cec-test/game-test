@@ -334,26 +334,39 @@
             // Randomly choose which lane to spawn in (0 or 1)
             const lane = Math.random() > 0.5 ? 1 : 0;
             
-            // ABSOLUTE RULE: Lane number MUST equal digit value
-            // Lane 0 (LEFT) = 0s only, Lane 1 (RIGHT) = 1s only
-            const value = lane; // Force value to match lane
+            // ABSOLUTE RULE: Lane 0 (LEFT) = 0s, Lane 1 (RIGHT) = 1s
+            // The digit VALUE must ALWAYS match the LANE number
+            let value, xPos;
             
-            // Calculate X position based on lane
-            const xPos = (lane === 0) ? (LANE_WIDTH / 2) : (LANE_WIDTH + LANE_WIDTH / 2);
-            
-            // Failsafe: Double-check the rule
-            if (value !== lane) {
-                console.error('BUG: Value does not match lane!', {value, lane});
-                return; // Don't spawn if rule is broken
+            if (lane === 0) {
+                // LEFT LANE (cyan) - spawn 0
+                value = 0;
+                xPos = 100; // Explicit: Left lane center
+            } else if (lane === 1) {
+                // RIGHT LANE (orange) - spawn 1
+                value = 1;
+                xPos = 300; // Explicit: Right lane center
             }
             
-            gameState.digits.push({
+            // DEBUG: Log what we're spawning
+            console.log(`Spawning: value=${value}, lane=${lane}, x=${xPos}`);
+            
+            // Triple-check the rule before adding
+            if (value !== lane) {
+                console.error('CRITICAL BUG: Value does not match lane!', {value, lane, xPos});
+                return;
+            }
+            
+            const newDigit = {
                 value: value,
                 lane: lane,
                 y: -DIGIT_SIZE,
                 x: xPos,
                 checked: false
-            });
+            };
+            
+            console.log('Digit created:', newDigit);
+            gameState.digits.push(newDigit);
         }
 
         function createSwitchParticles() {
