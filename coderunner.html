@@ -434,7 +434,8 @@
                 spawnRate: 60,
                 screenShake: 0,
                 gridOffset: 0,
-                initialDelay: 3.0 // 3 second delay before spawning starts
+                initialDelay: 3.0, // 3 second delay before spawning starts
+                recentSpawns: [] // Track last spawns to prevent > 3 in a row
             };
             
             startScreen.classList.add('hidden');
