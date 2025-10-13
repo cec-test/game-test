@@ -453,7 +453,20 @@
 
         function triggerBlackout() {
             gameState.isBlackout = true;
-            const directions = ['up', 'down', 'left', 'right'];
+            
+            // Build valid directions based on player position (anti-cheat)
+            const directions = [];
+            if (gameState.playerGridY > 0) directions.push('up');
+            if (gameState.playerGridY < GRID_SIZE - 1) directions.push('down');
+            if (gameState.playerGridX > 0) directions.push('left');
+            if (gameState.playerGridX < GRID_SIZE - 1) directions.push('right');
+            
+            // Hide buttons for invalid directions
+            document.querySelector('.dir-up').style.display = directions.includes('up') ? 'block' : 'none';
+            document.querySelector('.dir-down').style.display = directions.includes('down') ? 'block' : 'none';
+            document.querySelector('.dir-left').style.display = directions.includes('left') ? 'block' : 'none';
+            document.querySelector('.dir-right').style.display = directions.includes('right') ? 'block' : 'none';
+            
             gameState.stalkerDirection = directions[Math.floor(Math.random() * directions.length)];
             document.getElementById('blackoutChoice').classList.remove('hidden');
         }
