@@ -331,8 +331,24 @@
         startBtn.addEventListener('click', startGame);
 
         function spawnDigit() {
-            // Randomly choose which lane to spawn in (0 or 1)
-            const lane = Math.random() > 0.5 ? 1 : 0;
+            // Check if last 3 spawns were the same lane
+            let lane;
+            if (gameState.recentSpawns.length >= 3) {
+                const last3 = gameState.recentSpawns.slice(-3);
+                const allSame = last3.every(val => val === last3[0]);
+                
+                if (allSame) {
+                    // Force opposite lane to break the pattern
+                    lane = last3[0] === 0 ? 1 : 0;
+                    console.log(`Breaking pattern! Last 3 were ${last3[0]}, forcing ${lane}`);
+                } else {
+                    // Random choice
+                    lane = Math.random() > 0.5 ? 1 : 0;
+                }
+            } else {
+                // Random choice (first few spawns)
+                lane = Math.random() > 0.5 ? 1 : 0;
+            }
             
             // ABSOLUTE RULE: Lane 0 (LEFT) = 0s, Lane 1 (RIGHT) = 1s
             // The digit VALUE must ALWAYS match the LANE number
