@@ -382,11 +382,16 @@
                 // Laser sight when aiming
                 if (this.cooldown <= 0 && this.aimTime > 0) {
                     const aimProgress = this.aimTime / this.aimDuration;
+                    // Calculate exact distance to player
+                    const dx = gameState.player.x - this.x;
+                    const dy = gameState.player.y - this.y;
+                    const distanceToPlayer = Math.sqrt(dx * dx + dy * dy);
+                    
                     ctx.strokeStyle = `rgba(255, 0, 85, ${aimProgress * 0.6})`;
                     ctx.lineWidth = 2;
                     ctx.beginPath();
                     ctx.moveTo(0, 0);
-                    ctx.lineTo(0, -500);
+                    ctx.lineTo(0, -distanceToPlayer); // Draw exactly to player
                     ctx.stroke();
                 }
                 
