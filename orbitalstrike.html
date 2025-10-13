@@ -531,7 +531,7 @@
             // Update enemies
             for (let i = gameState.enemies.length - 1; i >= 0; i--) {
                 const enemy = gameState.enemies[i];
-                enemy.angle += enemy.speed * deltaTime * gameState.timeScale * 0.01;
+                enemy.angle += enemy.speed * deltaTime * gameState.timeScale; // Remove 0.01 - was making them too slow!
                 
                 const ex = CENTER_X + Math.cos(enemy.angle) * enemy.orbit;
                 const ey = CENTER_Y + Math.sin(enemy.angle) * enemy.orbit;
