@@ -331,16 +331,24 @@
         startBtn.addEventListener('click', startGame);
 
         function spawnDigit() {
-            // Randomly choose which lane to spawn in
+            // Randomly choose which lane to spawn in (0 or 1)
             const lane = Math.random() > 0.5 ? 1 : 0;
-            // Digit value ALWAYS matches its lane (0s in Lane 0, 1s in Lane 1)
-            const value = lane;
+            
+            // RULE: Lane 0 gets 0s, Lane 1 gets 1s (ALWAYS!)
+            let value, xPos;
+            if (lane === 0) {
+                value = 0; // Lane 0 = only 0s
+                xPos = LANE_WIDTH / 2; // Center of left lane
+            } else {
+                value = 1; // Lane 1 = only 1s
+                xPos = LANE_WIDTH + LANE_WIDTH / 2; // Center of right lane
+            }
             
             gameState.digits.push({
                 value: value,
                 lane: lane,
                 y: -DIGIT_SIZE,
-                x: lane * LANE_WIDTH + LANE_WIDTH / 2,
+                x: xPos,
                 checked: false
             });
         }
