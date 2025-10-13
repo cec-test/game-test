@@ -145,6 +145,12 @@
             --card-rgb: 0, 255, 255;
         }
 
+        .game-card.orbitalstrike {
+            --card-color1: #0088ff;
+            --card-color2: #ff0055;
+            --card-rgb: 0, 136, 255;
+        }
+
         .game-icon {
             font-size: 8em;
             margin-bottom: 20px;
@@ -208,6 +214,13 @@
 
         .game-card.coderunner .game-title {
             background: linear-gradient(90deg, #00ffff, #00ff41);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .game-card.orbitalstrike .game-title {
+            background: linear-gradient(90deg, #0088ff, #ff0055);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -334,6 +347,17 @@
                     Match lanes to incoming digits.
                 </div>
                 <a href="coderunner.html" class="play-btn">▶ PLAY</a>
+            </div>
+
+            <!-- Orbital Strike Card -->
+            <div class="game-card orbitalstrike" onclick="window.location.href='orbitalstrike.html'">
+                <div class="game-icon">⚔️</div>
+                <div class="game-title">ORBITAL STRIKE</div>
+                <div class="game-desc">
+                    Swing your lightsaber. Deflect projectiles.
+                    Survive the orbital assault.
+                </div>
+                <a href="orbitalstrike.html" class="play-btn">▶ PLAY</a>
             </div>
         </div>
     </div>

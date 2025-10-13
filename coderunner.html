@@ -331,6 +331,11 @@
         startBtn.addEventListener('click', startGame);
 
         function spawnDigit() {
+            // Initialize recentSpawns if it doesn't exist
+            if (!gameState.recentSpawns) {
+                gameState.recentSpawns = [];
+            }
+            
             // Check if last 3 spawns were the same lane
             let lane;
             if (gameState.recentSpawns.length >= 3) {
