@@ -423,9 +423,10 @@
                     <p>MAX COMBO: <span id="finalCombo" style="color: var(--theme-color2, #00ffff);">0</span>x</p>
                     <p>HIGH SCORE: <span id="displayHighScore" style="color: #ffff00;">0</span></p>
                 </div>
+                <div id="newAchievements"></div>
                 <div style="margin: 20px 0;">
-                    <button id="playAgainBtn" onclick="startGame()">🔄 PLAY AGAIN 🔄</button>
-                    <button class="button-secondary" onclick="window.location.href='index.html'">◀ BACK TO MENU</button>
+                    <button class="button-secondary" onclick="window.location.href='index.html'">&#9664; BACK TO MENU</button>
+                    <button class="button-secondary" onclick="showMenu()">MENU</button>
                 </div>
                 <p class="restart-hint" style="font-size: 0.9em; margin-top: 10px;">or press SPACE</p>
             </div>
@@ -435,14 +436,10 @@
                 <h2>◤ POLARITY ◢</h2>
                 <p id="startInstructions1">▸ PRESS SPACE TO SWITCH (+5) ◂</p>
                 <p>▸ NEAR MISS = BONUS POINTS ◂</p>
-                <p>▸ BUILD MASSIVE COMBOS ◂</p>
-                <button id="startBtn">⚡ START ⚡</button>
-                <button class="button-secondary" onclick="window.location.href='index.html'">◀ BACK TO MENU</button>
-            </div>
         </div>
         <div class="info">
             <div class="score">SCORE: <span id="score">0</span></div>
-            <div class="combo" id="comboDisplay" style="display: none;">COMBO: <span id="combo">0</span>x</div>
+                <button class="button-secondary" onclick="window.location.href='index.html'">&#9664; BACK TO MENU</button>
         </div>
         <div class="instructions">
             <span id="controlHint">◆ SPACEBAR TO SWITCH (+5 PTS) ◆ SURVIVE ◆</span>
@@ -535,199 +532,6 @@
         // ===== THEMES =====
         const THEMES = {
             neon: { name: 'Neon', color1: '#ff00ff', color2: '#00ffff', rgb1: '255, 0, 255', rgb2: '0, 255, 255', unlock: 0 },
-            fire: { name: 'Fire', color1: '#ff4400', color2: '#ffaa00', rgb1: '255, 68, 0', rgb2: '255, 170, 0', unlock: 100 },
-            ocean: { name: 'Ocean', color1: '#0044ff', color2: '#00ffff', rgb1: '0, 68, 255', rgb2: '0, 255, 255', unlock: 250 },
-            poison: { name: 'Poison', color1: '#88ff00', color2: '#00ff88', rgb1: '136, 255, 0', rgb2: '0, 255, 136', unlock: 500 },
-            sunset: { name: 'Sunset', color1: '#ff0066', color2: '#ff9900', rgb1: '255, 0, 102', rgb2: '255, 153, 0', unlock: 750 },
-            galaxy: { name: 'Galaxy', color1: '#9900ff', color2: '#ff00cc', rgb1: '153, 0, 255', rgb2: '255, 0, 204', unlock: 1000 }
-        };
-
-        let currentTheme = localStorage.getItem('currentTheme') || 'neon';
-
-        function applyTheme(themeName) {
-            const theme = THEMES[themeName];
-            document.documentElement.style.setProperty('--theme-color1', theme.color1);
-            document.documentElement.style.setProperty('--theme-color2', theme.color2);
-            document.documentElement.style.setProperty('--theme-rgb1', theme.rgb1);
-            document.documentElement.style.setProperty('--theme-rgb2', theme.rgb2);
-            document.documentElement.style.setProperty('--theme-primary', theme.color1 + '22');
-            currentTheme = themeName;
-            localStorage.setItem('currentTheme', themeName);
-        }
-
-        function renderThemeSelector() {
-            const highScore = parseInt(localStorage.getItem('polarityHighScore')) || 0;
-            const selector = document.getElementById('themeSelector');
-            selector.innerHTML = '';
-            
-            Object.entries(THEMES).forEach(([key, theme]) => {
-                const div = document.createElement('div');
-                div.className = 'theme-option';
-                div.style.background = `linear-gradient(135deg, ${theme.color1}, ${theme.color2})`;
-                
-                const unlocked = highScore >= theme.unlock;
-                if (!unlocked) div.classList.add('locked');
-                if (key === currentTheme) div.classList.add('selected');
-                
-                div.title = `${theme.name} - ${unlocked ? 'Unlocked!' : 'Unlock at ' + theme.unlock + ' points'}`;
-                
-                if (unlocked) {
-                    div.onclick = () => {
-                        applyTheme(key);
-                        renderThemeSelector();
-                    };
-                }
-                
-                selector.appendChild(div);
-            });
-        }
-
-        // ===== ACHIEVEMENTS =====
-        const ACHIEVEMENTS = [
-            { id: 'first_game', name: 'First Steps', desc: 'Play your first game', icon: '🎮', check: (stats) => stats.gamesPlayed >= 1 },
-            { id: 'score_100', name: 'Century', desc: 'Score 100 points', icon: '💯', check: (stats) => stats.highScore >= 100 },
-            { id: 'score_500', name: 'Veteran', desc: 'Score 500 points', icon: '⭐', check: (stats) => stats.highScore >= 500 },
-            { id: 'score_1000', name: 'Master', desc: 'Score 1000 points', icon: '👑', check: (stats) => stats.highScore >= 1000 },
-            { id: 'combo_20', name: 'Combo King', desc: 'Get a 20x combo', icon: '🔥', check: (stats) => stats.maxCombo >= 20 },
-            { id: 'combo_50', name: 'Unstoppable', desc: 'Get a 50x combo', icon: '⚡', check: (stats) => stats.maxCombo >= 50 },
-            { id: 'near_miss_50', name: 'Close Shave', desc: 'Get 50 near misses', icon: '😰', check: (stats) => stats.totalNearMisses >= 50 },
-            { id: 'switches_100', name: 'Switch Master', desc: 'Switch 100 times', icon: '🔄', check: (stats) => stats.totalSwitches >= 100 },
-            { id: 'games_10', name: 'Dedicated', desc: 'Play 10 games', icon: '🎯', check: (stats) => stats.gamesPlayed >= 10 }
-        ];
-
-        function checkAchievements(stats) {
-            const unlockedAchievements = JSON.parse(localStorage.getItem('achievements') || '[]');
-            const newAchievements = [];
-            
-            ACHIEVEMENTS.forEach(achievement => {
-                if (!unlockedAchievements.includes(achievement.id) && achievement.check(stats)) {
-                    unlockedAchievements.push(achievement.id);
-                    newAchievements.push(achievement);
-                }
-            });
-            
-            if (newAchievements.length > 0) {
-                localStorage.setItem('achievements', JSON.stringify(unlockedAchievements));
-            }
-            
-            return newAchievements;
-        }
-
-        function renderAchievements() {
-            const container = document.getElementById('achievements');
-            const unlockedAchievements = JSON.parse(localStorage.getItem('achievements') || '[]');
-            
-            container.innerHTML = '';
-            ACHIEVEMENTS.forEach(achievement => {
-                const div = document.createElement('div');
-                div.className = 'achievement';
-                if (unlockedAchievements.includes(achievement.id)) {
-                    div.classList.add('unlocked');
-                }
-                
-                div.innerHTML = `
-                    <div class="achievement-icon">${achievement.icon}</div>
-                    <div style="flex: 1; text-align: left;">
-                        <div style="font-weight: bold;">${achievement.name}</div>
-                        <div style="font-size: 0.8em; color: #888;">${achievement.desc}</div>
-                    </div>
-                `;
-                
-                container.appendChild(div);
-            });
-        }
-
-        // ===== DAILY CHALLENGE =====
-        function getDailyChallenge() {
-            const today = new Date().toDateString();
-            const challenges = [
-                { desc: 'Get 10 INSANE near misses', target: 10, key: 'insaneNearMisses' },
-                { desc: 'Reach a 30x combo', target: 30, key: 'maxCombo' },
-                { desc: 'Score 500 points', target: 500, key: 'score' },
-                { desc: 'Get 20 near misses', target: 20, key: 'nearMisses' },
-                { desc: 'Switch sides 50 times', target: 50, key: 'switches' }
-            ];
-            
-            const dayIndex = new Date().getDate() % challenges.length;
-            const challenge = challenges[dayIndex];
-            
-            const completed = JSON.parse(localStorage.getItem('dailyChallenges') || '{}');
-            const isCompleted = completed[today] === true;
-            
-            return { ...challenge, today, isCompleted };
-        }
-
-        function updateDailyChallenge(stats) {
-            const challenge = getDailyChallenge();
-            const progress = stats[challenge.key] || 0;
-            
-            document.getElementById('dailyChallengeText').textContent = challenge.desc;
-            document.getElementById('dailyChallengeProgress').textContent = 
-                challenge.isCompleted ? '✅ COMPLETED!' : `Progress: ${Math.min(progress, challenge.target)}/${challenge.target}`;
-            
-            if (progress >= challenge.target && !challenge.isCompleted) {
-                const completed = JSON.parse(localStorage.getItem('dailyChallenges') || '{}');
-                completed[challenge.today] = true;
-                localStorage.setItem('dailyChallenges', JSON.stringify(completed));
-                return true;
-            }
-            
-            return false;
-        }
-
-        // ===== LEADERBOARD =====
-        function saveScore(score, combo) {
-            const leaderboard = JSON.parse(localStorage.getItem('leaderboard') || '[]');
-            leaderboard.push({ score, combo, date: new Date().toISOString() });
-            leaderboard.sort((a, b) => b.score - a.score);
-            leaderboard.splice(10); // Keep top 10
-            localStorage.setItem('leaderboard', JSON.stringify(leaderboard));
-        }
-
-        function renderLeaderboard(currentScore = null) {
-            const leaderboard = JSON.parse(localStorage.getItem('leaderboard') || '[]');
-            const container = document.getElementById('leaderboard');
-            
-            if (leaderboard.length === 0) {
-                container.innerHTML = '<p style="color: #888;">No scores yet. Play to set a record!</p>';
-                return;
-            }
-            
-            container.innerHTML = '';
-            leaderboard.forEach((entry, i) => {
-                const div = document.createElement('div');
-                div.className = 'leaderboard-entry';
-                if (entry.score === currentScore) {
-                    div.classList.add('current');
-                }
-                
-                const rank = ['🥇', '🥈', '🥉'][i] || `${i + 1}.`;
-                div.innerHTML = `
-                    <span>${rank} ${entry.score} pts</span>
-                    <span style="color: #888;">${entry.combo}x combo</span>
-                `;
-                
-                container.appendChild(div);
-            });
-        }
-
-        // ===== MENU =====
-        function showMenu() {
-            document.getElementById('menuScreen').classList.remove('hidden');
-            document.getElementById('gameOver').classList.add('hidden');
-            document.getElementById('startScreen').classList.add('hidden');
-            renderLeaderboard();
-            renderThemeSelector();
-            renderAchievements();
-        }
-
-        function hideMenu() {
-            document.getElementById('menuScreen').classList.add('hidden');
-            document.getElementById('startScreen').classList.remove('hidden');
-        }
-
-        // ===== MOBILE DETECTION =====
-        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
                          ('ontouchstart' in window) || 
                          (navigator.maxTouchPoints > 0);
 
@@ -1376,8 +1180,8 @@
                 highScore = gameState.score;
                 localStorage.setItem('polarityHighScore', highScore);
             }
-            displayHighScoreElement.textContent = highScore;
-            
+                playSound('combo');
+            }
             
             setTimeout(() => {
                 gameOverScreen.classList.remove('hidden');
@@ -1394,6 +1198,14 @@
         }
 
         // Initialize
+// Set default neon theme colors
+document.documentElement.style.setProperty('--theme-color1', '#ff00ff');
+document.documentElement.style.setProperty('--theme-color2', '#00ffff');
+document.documentElement.style.setProperty('--theme-rgb1', '255, 0, 255');
+document.documentElement.style.setProperty('--theme-rgb2', '0, 255, 255');
+document.documentElement.style.setProperty('--theme-primary', '#ff00ff22');
+        applyTheme(currentTheme);
+        updateDailyChallenge({});
         drawGame();
 
         // Update UI for mobile
