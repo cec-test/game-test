@@ -439,7 +439,7 @@
             gameState.enemies = [];
             
             const enemyCount = 3 + waveNum * 2;
-            const orbits = [60, 100, 140, 175]; // Keep all enemies in 400x600 canvas (center at 200,300)
+            const orbits = [120, 180, 240, 300]; // Larger orbits - innermost farther from player, can go off-screen
             
             for (let i = 0; i < enemyCount; i++) {
                 const orbit = orbits[Math.floor(Math.random() * orbits.length)];
