@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>CANDLELIGHT</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Creepster&family=Orbitron:wght@900&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Orbitron', sans-serif;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+            touch-action: none;
+        }
+
+        .container {
+            text-align: center;
+            padding: 0;
+            position: relative;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 0;
+            letter-spacing: 10px;
+            color: #fff;
+            text-shadow: 0 0 20px rgba(255, 200, 100, 0.8);
+            font-family: 'Creepster', cursive;
+        }
+
+        .game-wrapper {
+            position: relative;
+            display: inline-block;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #000;
+            box-shadow: 0 0 50px rgba(255, 200, 100, 0.3);
+            border: 3px solid #444;
+        }
+
+        #gameCanvas {
+            display: block;
+            background: #000;
+        }
+
+        .game-over, .start-screen, .level-complete {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            backdrop-filter: blur(10px);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .game-over h2, .level-complete h2 {
+            font-size: 3em;
+            margin-bottom: 20px;
+            color: #ff0000;
+            text-shadow: 0 0 30px rgba(255, 0, 0, 0.8);
+            font-family: 'Creepster', cursive;
+        }
+
+        .level-complete h2 {
+            color: #ffd700;
+            text-shadow: 0 0 30px rgba(255, 215, 0, 0.8);
+        }
+
+        .start-screen h2 {
+            font-size: 2.5em;
+            color: #ffc864;
+            text-shadow: 0 0 20px rgba(255, 200, 100, 0.8);
+            margin-bottom: 20px;
+            font-family: 'Creepster', cursive;
+        }
+
+        .game-over p, .start-screen p, .level-complete p {
+            font-size: 1.1em;
+            margin: 8px 0;
+            color: #ccc;
+        }
+
+        button {
+            margin: 15px 10px;
+            padding: 15px 40px;
+            font-size: 1.2em;
+            font-weight: 900;
+            font-family: 'Orbitron', sans-serif;
+            background: #ffc864;
+            color: #000;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 0 20px rgba(255, 200, 100, 0.5);
+            text-transform: uppercase;
+        }
+
+        button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(255, 200, 100, 0.8);
+        }
+
+        .button-secondary {
+            background: #333;
+            color: #fff;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+        }
+
+        .blackout-choice {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 20;
+            text-align: center;
+        }
+
+        .blackout-choice h3 {
+            color: #fff;
+            font-size: 2em;
+            margin-bottom: 30px;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+            animation: pulse 1s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; }
+        }
+
+        .direction-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, 80px);
+            grid-template-rows: repeat(3, 80px);
+            gap: 10px;
+            margin: 0 auto;
+        }
+
+        .dir-btn {
+            font-size: 2em;
+            padding: 0;
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid #fff;
+            color: #fff;
+        }
+
+        .dir-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .dir-up { grid-column: 2; grid-row: 1; }
+        .dir-left { grid-column: 1; grid-row: 2; }
+        .dir-right { grid-column: 3; grid-row: 2; }
+        .dir-down { grid-column: 2; grid-row: 3; }
+
+        .instructions {
+            margin-top: 10px;
+            color: #888;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🕯️ CANDLELIGHT</h1>
+        <div class="game-wrapper">
+            <canvas id="gameCanvas" width="700" height="900"></canvas>
+            
+            <!-- Start Screen -->
+            <div id="startScreen" class="start-screen">
+                <h2>🕯️ CANDLELIGHT 🕯️</h2>
+                <p><strong>Collect 5 Memory Shards</strong></p>
+                <p><strong>Survive the Blackouts</strong></p>
+                <p style="margin-top: 20px;">Your lantern will go out every 10-15 seconds.</p>
+                <p>Choose a direction in the darkness.</p>
+                <p style="color: #ff0000;">Choose wrong... and it finds you.</p>
+                <p style="margin-top: 20px;">⌨️ Arrow Keys or WASD to move</p>
+                <button onclick="startGame()">⚡ BEGIN ⚡</button>
+                <button class="button-secondary" onclick="window.location.href='index.html'">◀ BACK</button>
+            </div>
+
+            <!-- Game Over Screen -->
+            <div id="gameOver" class="game-over hidden">
+                <h2>IT FOUND YOU</h2>
+                <p>Level Reached: <span id="finalLevel" style="color: #ff0000;">1</span></p>
+                <p>Shards Collected: <span id="finalShards" style="color: #ff0000;">0</span></p>
+                <button onclick="restartGame()">🔄 TRY AGAIN</button>
+                <button class="button-secondary" onclick="window.location.href='index.html'">◀ BACK TO MENU</button>
+            </div>
+
+            <!-- Level Complete Screen -->
+            <div id="levelComplete" class="level-complete hidden">
+                <h2>LEVEL COMPLETE</h2>
+                <p>All shards collected!</p>
+                <p>Moving to next level...</p>
+                <p id="levelCompleteMsg"></p>
+            </div>
+
+            <!-- Blackout Direction Choice -->
+            <div id="blackoutChoice" class="blackout-choice hidden">
+                <h3>CHOOSE A DIRECTION</h3>
+                <div class="direction-buttons">
+                    <button class="dir-btn dir-up" onclick="chooseDirection('up')">↑</button>
+                    <button class="dir-btn dir-left" onclick="chooseDirection('left')">←</button>
+                    <button class="dir-btn dir-right" onclick="chooseDirection('right')">→</button>
+                    <button class="dir-btn dir-down" onclick="chooseDirection('down')">↓</button>
+                </div>
+            </div>
+        </div>
+        <div class="instructions">
+            <span>🕯️ SURVIVE THE DARKNESS 🕯️</span>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Constants
+        const GRID_SIZE = 25;
+        const TILE_SIZE = 28; // 700 / 25
+        const GAME_AREA_HEIGHT = 700;
+        const UI_AREA_HEIGHT = 200;
+        const LIGHT_RADIUS = 1; // 3x3 grid
+        const MOVE_SPEED = 0.15; // Smooth movement interpolation
+        
+        // Level configurations
+        const LEVELS = [
+            { floor: '#e0e0e0', shard: '#00ffff', name: 'Level 1' },
+            { floor: '#d0d8e8', shard: '#ff00ff', name: 'Level 2' },
+            { floor: '#e8ddc0', shard: '#ffff00', name: 'Level 3' },
+            { floor: '#d0e8d0', shard: '#ff8800', name: 'Level 4' },
+            { floor: '#e0d0e8', shard: '#ff0000', name: 'Level 5' }
+        ];
+
+        // Game state
+        let gameState = {
+            playing: false,
+            currentLevel: 0,
+            playerGridX: 12,
+            playerGridY: 12,
+            playerX: 12 * TILE_SIZE + TILE_SIZE / 2,
+            playerY: 12 * TILE_SIZE + TILE_SIZE / 2,
+            targetGridX: 12,
+            targetGridY: 12,
+            shards: [],
+            collectedShards: [],
+            exitPos: null,
+            blackoutTimer: 0,
+            nextBlackoutTime: 10000 + Math.random() * 5000,
+            isBlackout: false,
+            stalkerDirection: null,
+            lightFlicker: 0
+        };
+
+        // Input
+        const keys = {};
+        document.addEventListener('keydown', (e) => {
+            keys[e.key.toLowerCase()] = true;
+            if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) {
+                e.preventDefault();
+            }
+        });
+        document.addEventListener('keyup', (e) => {
+            keys[e.key.toLowerCase()] = false;
+        });
+
+        // Initialize level
+        function initLevel() {
+            gameState.playerGridX = 12;
+            gameState.playerGridY = 12;
+            gameState.playerX = 12 * TILE_SIZE + TILE_SIZE / 2;
+            gameState.playerY = 12 * TILE_SIZE + TILE_SIZE / 2;
+            gameState.targetGridX = 12;
+            gameState.targetGridY = 12;
+            gameState.shards = [];
+            gameState.exitPos = null;
+            gameState.blackoutTimer = 0;
+            gameState.nextBlackoutTime = 10000 + Math.random() * 5000;
+            gameState.isBlackout = false;
+
+            // Spawn 5 shards
+            for (let i = 0; i < 5; i++) {
+                let x, y;
+                do {
+                    x = Math.floor(Math.random() * GRID_SIZE);
+                    y = Math.floor(Math.random() * GRID_SIZE);
+                } while ((x === 12 && y === 12) || gameState.shards.some(s => s.x === x && s.y === y));
+                
+                gameState.shards.push({ x, y, glow: 0 });
+            }
+        }
+
+        function startGame() {
+            gameState.playing = true;
+            gameState.currentLevel = 0;
+            gameState.collectedShards = [];
+            document.getElementById('startScreen').classList.add('hidden');
+            initLevel();
+            gameLoop();
+        }
+
+        function restartGame() {
+            gameState.collectedShards = [];
+            gameState.currentLevel = 0;
+            document.getElementById('gameOver').classList.add('hidden');
+            startGame();
+        }
+
+        function nextLevel() {
+            gameState.currentLevel++;
+            if (gameState.currentLevel >= LEVELS.length) {
+                // Win game!
+                alert('🎉 YOU ESCAPED! ALL LEVELS COMPLETE! 🎉');
+                window.location.href = 'index.html';
+                return;
+            }
+            document.getElementById('levelComplete').classList.add('hidden');
+            initLevel();
+        }
+
+        function gameOver() {
+            gameState.playing = false;
+            document.getElementById('finalLevel').textContent = gameState.currentLevel + 1;
+            document.getElementById('finalShards').textContent = gameState.collectedShards.length;
+            
+            // Death animation
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(0, 0, canvas.width, GAME_AREA_HEIGHT);
+            
+            setTimeout(() => {
+                ctx.fillStyle = '#000';
+                ctx.fillRect(0, 0, canvas.width, GAME_AREA_HEIGHT);
+                
+                // Draw stalker silhouette
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+                ctx.fillRect(canvas.width / 2 - 60, 200, 120, 300);
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+                ctx.fillRect(canvas.width / 2 - 10, 350, 20, 5);
+                
+                setTimeout(() => {
+                    document.getElementById('gameOver').classList.remove('hidden');
+                }, 500);
+            }, 200);
+        }
+
+        function updatePlayer(deltaTime) {
+            if (gameState.isBlackout) return;
+
+            // Check for input and set target
+            let moved = false;
+            if ((keys['arrowup'] || keys['w']) && gameState.targetGridY === gameState.playerGridY) {
+                if (gameState.playerGridY > 0) {
+                    gameState.targetGridY--;
+                    moved = true;
+                }
+            } else if ((keys['arrowdown'] || keys['s']) && gameState.targetGridY === gameState.playerGridY) {
+                if (gameState.playerGridY < GRID_SIZE - 1) {
+                    gameState.targetGridY++;
+                    moved = true;
+                }
+            } else if ((keys['arrowleft'] || keys['a']) && gameState.targetGridX === gameState.playerGridX) {
+                if (gameState.playerGridX > 0) {
+                    gameState.targetGridX--;
+                    moved = true;
+                }
+            } else if ((keys['arrowright'] || keys['d']) && gameState.targetGridX === gameState.playerGridX) {
+                if (gameState.playerGridX < GRID_SIZE - 1) {
+                    gameState.targetGridX++;
+                    moved = true;
+                }
+            }
+
+            // Smooth movement toward target
+            const targetX = gameState.targetGridX * TILE_SIZE + TILE_SIZE / 2;
+            const targetY = gameState.targetGridY * TILE_SIZE + TILE_SIZE / 2;
+            
+            gameState.playerX += (targetX - gameState.playerX) * MOVE_SPEED;
+            gameState.playerY += (targetY - gameState.playerY) * MOVE_SPEED;
+
+            // Snap to grid if close enough
+            if (Math.abs(gameState.playerX - targetX) < 1 && Math.abs(gameState.playerY - targetY) < 1) {
+                gameState.playerX = targetX;
+                gameState.playerY = targetY;
+                gameState.playerGridX = gameState.targetGridX;
+                gameState.playerGridY = gameState.targetGridY;
+
+                // Check shard collection
+                for (let i = gameState.shards.length - 1; i >= 0; i--) {
+                    const shard = gameState.shards[i];
+                    if (shard.x === gameState.playerGridX && shard.y === gameState.playerGridY) {
+                        gameState.collectedShards.push(LEVELS[gameState.currentLevel].shard);
+                        gameState.shards.splice(i, 1);
+                        
+                        // Spawn exit if all collected
+                        if (gameState.shards.length === 0) {
+                            let x, y;
+                            do {
+                                x = Math.floor(Math.random() * GRID_SIZE);
+                                y = Math.floor(Math.random() * GRID_SIZE);
+                            } while (x === gameState.playerGridX && y === gameState.playerGridY);
+                            gameState.exitPos = { x, y };
+                        }
+                    }
+                }
+
+                // Check exit
+                if (gameState.exitPos && 
+                    gameState.exitPos.x === gameState.playerGridX && 
+                    gameState.exitPos.y === gameState.playerGridY) {
+                    document.getElementById('levelComplete').classList.remove('hidden');
+                    setTimeout(() => nextLevel(), 2000);
+                }
+            }
+        }
+
+        function updateBlackout(deltaTime) {
+            if (gameState.isBlackout) return;
+
+            gameState.blackoutTimer += deltaTime;
+            gameState.lightFlicker = Math.sin(Date.now() / 100) * 0.3;
+
+            if (gameState.blackoutTimer >= gameState.nextBlackoutTime) {
+                triggerBlackout();
+            }
+        }
+
+        function triggerBlackout() {
+            gameState.isBlackout = true;
+            const directions = ['up', 'down', 'left', 'right'];
+            gameState.stalkerDirection = directions[Math.floor(Math.random() * directions.length)];
+            document.getElementById('blackoutChoice').classList.remove('hidden');
+        }
+
+        function chooseDirection(direction) {
+            document.getElementById('blackoutChoice').classList.add('hidden');
+            
+            if (direction === gameState.stalkerDirection) {
+                // Wrong choice - death
+                gameOver();
+            } else {
+                // Survived - reset
+                gameState.isBlackout = false;
+                gameState.blackoutTimer = 0;
+                gameState.nextBlackoutTime = 10000 + Math.random() * 5000;
+            }
+        }
+
+        function drawGame() {
+            // Clear game area
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, GAME_AREA_HEIGHT);
+
+            if (gameState.isBlackout) {
+                drawUI();
+                return;
+            }
+
+            const level = LEVELS[gameState.currentLevel];
+            const playerTileX = Math.floor(gameState.playerX / TILE_SIZE);
+            const playerTileY = Math.floor(gameState.playerY / TILE_SIZE);
+
+            // Draw tiles in light radius
+            for (let dy = -LIGHT_RADIUS; dy <= LIGHT_RADIUS; dy++) {
+                for (let dx = -LIGHT_RADIUS; dx <= LIGHT_RADIUS; dx++) {
+                    const tileX = playerTileX + dx;
+                    const tileY = playerTileY + dy;
+                    
+                    if (tileX < 0 || tileX >= GRID_SIZE || tileY < 0 || tileY >= GRID_SIZE) continue;
+
+                    // Calculate distance for gradient
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    const maxDist = Math.sqrt(2 * LIGHT_RADIUS * LIGHT_RADIUS);
+                    let alpha = 1 - (dist / maxDist) * 0.7;
+                    alpha = Math.max(0, Math.min(1, alpha + gameState.lightFlicker));
+
+                    // Draw tile
+                    ctx.fillStyle = level.floor;
+                    ctx.globalAlpha = alpha;
+                    ctx.fillRect(tileX * TILE_SIZE, tileY * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+
+                    // Draw grid lines
+                    ctx.strokeStyle = '#999';
+                    ctx.lineWidth = 1;
+                    ctx.globalAlpha = alpha * 0.3;
+                    ctx.strokeRect(tileX * TILE_SIZE, tileY * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                    ctx.globalAlpha = 1;
+                }
+            }
+
+            // Draw shards (with glow)
+            gameState.shards.forEach(shard => {
+                const dx = shard.x - playerTileX;
+                const dy = shard.y - playerTileY;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                
+                if (dist <= LIGHT_RADIUS + 2) { // Visible slightly beyond light
+                    shard.glow = (shard.glow + 0.05) % (Math.PI * 2);
+                    const glowIntensity = Math.sin(shard.glow) * 0.5 + 0.5;
+                    
+                    ctx.save();
+                    ctx.globalAlpha = Math.max(0, 1 - dist / 5) * glowIntensity;
+                    ctx.fillStyle = level.shard;
+                    ctx.shadowBlur = 20;
+                    ctx.shadowColor = level.shard;
+                    ctx.beginPath();
+                    ctx.arc(
+                        shard.x * TILE_SIZE + TILE_SIZE / 2,
+                        shard.y * TILE_SIZE + TILE_SIZE / 2,
+                        8,
+                        0,
+                        Math.PI * 2
+                    );
+                    ctx.fill();
+                    ctx.restore();
+                }
+            });
+
+            // Draw exit
+            if (gameState.exitPos) {
+                const dx = gameState.exitPos.x - playerTileX;
+                const dy = gameState.exitPos.y - playerTileY;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                
+                if (dist <= LIGHT_RADIUS + 1) {
+                    ctx.save();
+                    ctx.globalAlpha = Math.max(0, 1 - dist / 4);
+                    ctx.fillStyle = '#ffd700';
+                    ctx.shadowBlur = 30;
+                    ctx.shadowColor = '#ffd700';
+                    ctx.fillRect(
+                        gameState.exitPos.x * TILE_SIZE + 6,
+                        gameState.exitPos.y * TILE_SIZE + 6,
+                        TILE_SIZE - 12,
+                        TILE_SIZE - 12
+                    );
+                    ctx.restore();
+                }
+            }
+
+            // Draw player (stick figure)
+            ctx.save();
+            ctx.fillStyle = '#000';
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 2;
+            
+            // Head
+            ctx.beginPath();
+            ctx.arc(gameState.playerX, gameState.playerY - 8, 4, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Body
+            ctx.beginPath();
+            ctx.moveTo(gameState.playerX, gameState.playerY - 4);
+            ctx.lineTo(gameState.playerX, gameState.playerY + 6);
+            ctx.stroke();
+            
+            // Arms
+            ctx.beginPath();
+            ctx.moveTo(gameState.playerX - 5, gameState.playerY);
+            ctx.lineTo(gameState.playerX + 5, gameState.playerY);
+            ctx.stroke();
+            
+            // Legs
+            ctx.beginPath();
+            ctx.moveTo(gameState.playerX, gameState.playerY + 6);
+            ctx.lineTo(gameState.playerX - 4, gameState.playerY + 12);
+            ctx.moveTo(gameState.playerX, gameState.playerY + 6);
+            ctx.lineTo(gameState.playerX + 4, gameState.playerY + 12);
+            ctx.stroke();
+            
+            ctx.restore();
+
+            drawUI();
+        }
+
+        function drawUI() {
+            // Draw UI area background
+            ctx.fillStyle = '#1a1a1a';
+            ctx.fillRect(0, GAME_AREA_HEIGHT, canvas.width, UI_AREA_HEIGHT);
+
+            // Draw level info
+            ctx.fillStyle = '#ffc864';
+            ctx.font = 'bold 24px Orbitron';
+            ctx.textAlign = 'center';
+            ctx.fillText(LEVELS[gameState.currentLevel].name, canvas.width / 2, GAME_AREA_HEIGHT + 40);
+
+            // Draw collected shards
+            ctx.font = 'bold 18px Orbitron';
+            ctx.fillText('Memory Shards', canvas.width / 2, GAME_AREA_HEIGHT + 80);
+            
+            const shardSpacing = 40;
+            const startX = canvas.width / 2 - (4 * shardSpacing) / 2;
+            for (let i = 0; i < 5; i++) {
+                if (i < gameState.collectedShards.length) {
+                    ctx.fillStyle = gameState.collectedShards[i];
+                    ctx.shadowBlur = 15;
+                    ctx.shadowColor = gameState.collectedShards[i];
+                } else {
+                    ctx.fillStyle = '#333';
+                    ctx.shadowBlur = 0;
+                }
+                ctx.beginPath();
+                ctx.arc(startX + i * shardSpacing, GAME_AREA_HEIGHT + 120, 12, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.shadowBlur = 0;
+
+            // Blackout warning
+            if (!gameState.isBlackout) {
+                const timeUntilBlackout = gameState.nextBlackoutTime - gameState.blackoutTimer;
+                if (timeUntilBlackout < 3000) {
+                    ctx.fillStyle = '#ff0000';
+                    ctx.globalAlpha = 0.5 + Math.sin(Date.now() / 200) * 0.5;
+                    ctx.font = 'bold 16px Orbitron';
+                    ctx.fillText('⚠️ LANTERN FLICKERING ⚠️', canvas.width / 2, GAME_AREA_HEIGHT + 170);
+                    ctx.globalAlpha = 1;
+                }
+            }
+        }
+
+        let lastTime = Date.now();
+        function gameLoop() {
+            if (!gameState.playing) return;
+
+            const now = Date.now();
+            const deltaTime = now - lastTime;
+            lastTime = now;
+
+            updatePlayer(deltaTime);
+            updateBlackout(deltaTime);
+            drawGame();
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Initial draw
+        ctx.fillStyle = '#000';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    </script>
+</body>
+</html>
