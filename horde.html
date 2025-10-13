@@ -6,7 +6,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <title>HORDE</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght:900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@900&display=swap');
         
         * {
             margin: 0;
@@ -55,7 +55,7 @@
             position: relative;
             display: inline-block;
             border-radius: 10px;
-            overflow: hidden;
+            overflow: visible;
             background: #3d2817;
             box-shadow: 0 0 50px rgba(139, 0, 0, 0.6);
         }
@@ -101,15 +101,55 @@
             transform: translateY(-50%);
         }
 
+        #rocketCrate {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background: rgba(139, 69, 19, 0.9);
+            border: 3px solid #ff6600;
+            border-radius: 8px;
+            cursor: crosshair;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            box-shadow: 0 0 20px rgba(255, 100, 0, 0.8);
+            animation: crateGlow 1s infinite alternate;
+            z-index: 5;
+        }
+
+        @keyframes crateGlow {
+            from { box-shadow: 0 0 20px rgba(255, 100, 0, 0.5); }
+            to { box-shadow: 0 0 30px rgba(255, 100, 0, 1); }
+        }
+
+        #rocketMode {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 100, 0, 0.95);
+            padding: 12px 25px;
+            border-radius: 8px;
+            color: white;
+            font-size: 20px;
+            font-weight: 900;
+            border: 3px solid #ff0000;
+            display: none;
+            box-shadow: 0 0 30px rgba(255, 100, 0, 1);
+            z-index: 100;
+        }
+
         .info-bar {
             margin-top: 15px;
             display: flex;
             justify-content: space-around;
-            gap: 15px;
+            gap: 10px;
+            flex-wrap: wrap;
         }
 
         .info-item {
-            font-size: 1.1em;
+            font-size: 1em;
             font-weight: 900;
             color: #8b0000;
             text-shadow: 0 0 10px rgba(139, 0, 0, 0.8);
@@ -117,6 +157,24 @@
 
         .info-item span {
             color: #ff0000;
+        }
+
+        #reloadBar {
+            width: 100px;
+            height: 15px;
+            background: #333;
+            border: 2px solid #666;
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+            display: none;
+        }
+
+        #reloadProgress {
+            height: 100%;
+            background: linear-gradient(90deg, #ff0000, #ff6600);
+            width: 0%;
+            transition: width 0.1s linear;
         }
 
         .game-over, .start-screen {
@@ -139,29 +197,29 @@
         }
 
         .game-over h2, .start-screen h2 {
-            font-size: 3em;
+            font-size: 2.5em;
             color: #ff0000;
             text-shadow: 0 0 30px rgba(255, 0, 0, 0.8);
             margin-bottom: 20px;
         }
 
         .game-over p, .start-screen p {
-            font-size: 1.1em;
-            margin: 8px 0;
+            font-size: 1em;
+            margin: 6px 0;
             color: #fff;
         }
 
         .start-screen .instructions {
             max-width: 350px;
-            line-height: 1.6;
+            line-height: 1.5;
             margin: 15px;
-            font-size: 0.9em;
+            font-size: 0.85em;
         }
 
         button {
-            margin: 15px 10px;
-            padding: 18px 50px;
-            font-size: 1.4em;
+            margin: 12px 8px;
+            padding: 15px 40px;
+            font-size: 1.2em;
             font-weight: 900;
             font-family: 'Orbitron', sans-serif;
             background: #ff0000;
@@ -176,21 +234,21 @@
         }
 
         button:hover {
-            transform: scale(1.1);
+            transform: scale(1.05);
             box-shadow: 0 0 60px rgba(255, 0, 0, 1);
         }
 
         .button-secondary {
             background: #333;
             color: #ff0000;
-            padding: 12px 30px;
-            font-size: 1em;
+            padding: 10px 25px;
+            font-size: 0.9em;
         }
 
         @media (max-width: 768px) {
             h1 { font-size: 2em; letter-spacing: 10px; }
-            .info-item { font-size: 1em; }
-            button { padding: 15px 35px; font-size: 1.2em; }
+            .info-item { font-size: 0.9em; }
+            button { padding: 12px 30px; font-size: 1em; }
         }
     </style>
 </head>
@@ -201,6 +259,9 @@
             <canvas id="gameCanvas" width="400" height="600"></canvas>
             <div class="crosshair" id="crosshair"></div>
             
+            <div id="rocketCrate">🚀</div>
+            <div id="rocketMode">🚀 ROCKET MODE! 🚀</div>
+            
             <div id="startScreen" class="start-screen">
                 <h2>🧟 HORDE 🧟</h2>
                 <div class="instructions">
@@ -209,8 +270,8 @@
                     <p><br><strong>Controls:</strong></p>
                     <p>🖱️ Desktop: Aim with mouse, SPACE to shoot</p>
                     <p>📱 Mobile: Tap to aim and shoot</p>
-                    <p><br>Normal zombies: 3 shots</p>
-                    <p>Armored zombies (after 1min): 10 shots</p>
+                    <p><br>Normal zombies: 3 shots | Armored (after 1min): 10 shots</p>
+                    <p><strong>🚀 Shoot rocket crate every 25 kills for 3s of rocket power!</strong></p>
                 </div>
                 <button onclick="startGame()">⚡ START ⚡</button>
                 <button class="button-secondary" onclick="window.location.href='index.html'">◀ BACK</button>
@@ -227,8 +288,12 @@
         </div>
         <div class="info-bar">
             <div class="info-item">AMMO: <span id="ammo">100</span></div>
+            <div class="info-item" id="reloadContainer" style="display: none;">
+                RELOAD: <div id="reloadBar"><div id="reloadProgress"></div></div>
+            </div>
             <div class="info-item">TIME: <span id="time">0s</span></div>
             <div class="info-item">KILLS: <span id="kills">0</span></div>
+            <div class="info-item">ROCKETS: <span id="rockets">0</span></div>
             <div class="info-item">SCORE: <span id="score">0</span></div>
         </div>
     </div>
@@ -241,12 +306,19 @@
         let gameActive = false;
         let gameTime = 0;
         let kills = 0;
+        let lastKillMilestone = 0;
         let score = 0;
         let ammo = 100;
         let maxAmmo = 100;
         let isReloading = false;
         let reloadTime = 0;
         let reloadDuration = 3000;
+        let rockets = 0;
+        let rocketModeActive = false;
+        let rocketModeTimer = 0;
+        let rocketModeDuration = 3000;
+        let showRocketCrate = false;
+        let rocketCratePos = { x: 150, y: 100 };
 
         let mouseX = canvas.width / 2;
         let mouseY = canvas.height / 2;
@@ -369,10 +441,11 @@
         }
 
         class Bullet {
-            constructor(startX, startY, targetX, targetY) {
+            constructor(startX, startY, targetX, targetY, isRocket = false) {
                 this.x = startX;
                 this.y = startY;
-                this.speed = 12;
+                this.speed = isRocket ? 10 : 12;
+                this.isRocket = isRocket;
                 
                 const dx = targetX - startX;
                 const dy = targetY - startY;
@@ -380,11 +453,17 @@
                 this.vx = (dx / distance) * this.speed;
                 this.vy = (dy / distance) * this.speed;
                 
-                this.radius = 3;
+                this.radius = isRocket ? 6 : 3;
                 this.active = true;
+                this.trail = [];
             }
 
             update() {
+                if (this.isRocket) {
+                    this.trail.push({x: this.x, y: this.y});
+                    if (this.trail.length > 8) this.trail.shift();
+                }
+                
                 this.x += this.vx;
                 this.y += this.vy;
 
@@ -392,19 +471,21 @@
                     this.active = false;
                 }
 
-                for (let i = zombies.length - 1; i >= 0; i--) {
-                    const zombie = zombies[i];
-                    const dx = this.x - zombie.x;
-                    const dy = this.y - (zombie.y - zombie.height / 2);
-                    const distance = Math.sqrt(dx * dx + dy * dy);
+                if (this.isRocket) {
+                    const explosionRadius = 60;
+                    let hitAny = false;
+                    
+                    for (let i = zombies.length - 1; i >= 0; i--) {
+                        const zombie = zombies[i];
+                        const dx = this.x - zombie.x;
+                        const dy = this.y - (zombie.y - zombie.height / 2);
+                        const distance = Math.sqrt(dx * dx + dy * dy);
 
-                    if (distance < zombie.width / 2 + this.radius) {
-                        this.active = false;
-                        createBloodParticles(this.x, this.y);
-                        
-                        if (zombie.hit()) {
+                        if (distance < explosionRadius) {
+                            hitAny = true;
                             kills++;
                             score += zombie.type === ZOMBIE_ARMORED ? 20 : 10;
+                            createBloodParticles(zombie.x, zombie.y - zombie.height / 2);
                             
                             if (zombie.isClimbing) {
                                 zombies.forEach(z => {
@@ -416,19 +497,73 @@
                                     }
                                 });
                             }
-                            
                             zombies.splice(i, 1);
                         }
-                        break;
+                    }
+                    
+                    if (hitAny) {
+                        this.active = false;
+                        createExplosion(this.x, this.y);
+                    }
+                } else {
+                    for (let i = zombies.length - 1; i >= 0; i--) {
+                        const zombie = zombies[i];
+                        const dx = this.x - zombie.x;
+                        const dy = this.y - (zombie.y - zombie.height / 2);
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+
+                        if (distance < zombie.width / 2 + this.radius) {
+                            this.active = false;
+                            createBloodParticles(this.x, this.y);
+                            
+                            if (zombie.hit()) {
+                                kills++;
+                                score += zombie.type === ZOMBIE_ARMORED ? 20 : 10;
+                                
+                                if (zombie.isClimbing) {
+                                    zombies.forEach(z => {
+                                        if (z.side === zombie.side && 
+                                            z.isClimbing && 
+                                            z.climbLevel > zombie.climbLevel) {
+                                            z.isClimbing = false;
+                                            z.isWalking = true;
+                                        }
+                                    });
+                                }
+                                zombies.splice(i, 1);
+                            }
+                            break;
+                        }
                     }
                 }
             }
 
             draw() {
-                ctx.fillStyle = '#000';
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-                ctx.fill();
+                if (this.isRocket) {
+                    ctx.strokeStyle = 'rgba(255, 100, 0, 0.5)';
+                    ctx.lineWidth = 4;
+                    ctx.beginPath();
+                    this.trail.forEach((point, i) => {
+                        if (i === 0) ctx.moveTo(point.x, point.y);
+                        else ctx.lineTo(point.x, point.y);
+                    });
+                    ctx.stroke();
+                    
+                    ctx.fillStyle = '#ff6600';
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    ctx.fillStyle = '#ff0000';
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.radius / 2, 0, Math.PI * 2);
+                    ctx.fill();
+                } else {
+                    ctx.fillStyle = '#000';
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                    ctx.fill();
+                }
             }
         }
 
@@ -465,43 +600,106 @@
             }
         }
 
+        function createExplosion(x, y) {
+            for (let i = 0; i < 25; i++) {
+                particles.push(new Particle(x, y, Math.random() > 0.5 ? '#ff6600' : '#ff0000'));
+            }
+        }
+
+        function checkRocketUnlock() {
+            const milestone = Math.floor(kills / 25);
+            if (milestone > lastKillMilestone) {
+                lastKillMilestone = milestone;
+                showRocketCrate = true;
+                rocketCratePos = {
+                    x: 100 + Math.random() * 200,
+                    y: 100 + Math.random() * 150
+                };
+                document.getElementById('rocketCrate').style.display = 'flex';
+                document.getElementById('rocketCrate').style.left = rocketCratePos.x + 'px';
+                document.getElementById('rocketCrate').style.top = rocketCratePos.y + 'px';
+            }
+        }
+
+        function checkRocketCrateHit(x, y) {
+            if (!showRocketCrate) return false;
+            
+            const dx = x - (rocketCratePos.x + 25);
+            const dy = y - (rocketCratePos.y + 25);
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            if (distance < 35) {
+                showRocketCrate = false;
+                document.getElementById('rocketCrate').style.display = 'none';
+                activateRocketMode();
+                return true;
+            }
+            return false;
+        }
+
+        function activateRocketMode() {
+            rocketModeActive = true;
+            rocketModeTimer = 0;
+            document.getElementById('rocketMode').style.display = 'block';
+        }
+
         function spawnZombie() {
             const side = Math.random() < 0.5 ? 'left' : 'right';
             zombies.push(new Zombie(side));
         }
 
         function shoot() {
-            if (!gameActive || isReloading || ammo <= 0) return;
+            if (!gameActive || isReloading) return;
             
-            ammo--;
-            bullets.push(new Bullet(tower.x, tower.playerY, mouseX, mouseY));
-
-            if (ammo === 0) {
-                startReload();
+            if (rocketModeActive) {
+                bullets.push(new Bullet(tower.x, tower.playerY, mouseX, mouseY, true));
+            } else {
+                if (ammo <= 0) return;
+                ammo--;
+                bullets.push(new Bullet(tower.x, tower.playerY, mouseX, mouseY, false));
+                if (ammo === 0) startReload();
             }
+            
+            checkRocketCrateHit(mouseX, mouseY);
             updateUI();
         }
 
         function startReload() {
             isReloading = true;
             reloadTime = 0;
+            document.getElementById('reloadContainer').style.display = 'block';
+            document.getElementById('reloadBar').style.display = 'block';
         }
 
         function updateReload(deltaTime) {
             if (!isReloading) return;
             reloadTime += deltaTime;
+            const progress = (reloadTime / reloadDuration) * 100;
+            document.getElementById('reloadProgress').style.width = progress + '%';
             if (reloadTime >= reloadDuration) {
                 isReloading = false;
                 ammo = maxAmmo;
+                document.getElementById('reloadContainer').style.display = 'none';
                 updateUI();
             }
         }
 
+        function updateRocketMode(deltaTime) {
+            if (!rocketModeActive) return;
+            rocketModeTimer += deltaTime;
+            if (rocketModeTimer >= rocketModeDuration) {
+                rocketModeActive = false;
+                document.getElementById('rocketMode').style.display = 'none';
+            }
+        }
+
         function updateUI() {
-            document.getElementById('ammo').textContent = isReloading ? 'RELOAD' : ammo;
+            document.getElementById('ammo').textContent = rocketModeActive ? '∞' : (isReloading ? 'RELOAD' : ammo);
             document.getElementById('time').textContent = Math.floor(gameTime / 1000) + 's';
             document.getElementById('kills').textContent = kills;
+            document.getElementById('rockets').textContent = Math.floor(kills / 25);
             document.getElementById('score').textContent = score;
+            checkRocketUnlock();
         }
 
         function drawTower() {
@@ -580,6 +778,7 @@
             }
 
             updateReload(deltaTime);
+            updateRocketMode(deltaTime);
             zombies.forEach(zombie => zombie.update(deltaTime));
             bullets = bullets.filter(bullet => {
                 bullet.update();
@@ -608,14 +807,20 @@
             gameActive = true;
             gameTime = 0;
             kills = 0;
+            lastKillMilestone = 0;
             score = 0;
             ammo = maxAmmo;
+            rockets = 0;
             isReloading = false;
+            rocketModeActive = false;
+            showRocketCrate = false;
             zombies = [];
             bullets = [];
             particles = [];
             spawnTimer = 0;
             lastTime = 0;
+            document.getElementById('rocketCrate').style.display = 'none';
+            document.getElementById('rocketMode').style.display = 'none';
             updateUI();
         }
 
@@ -626,6 +831,8 @@
             document.getElementById('finalScore').textContent = score;
             document.getElementById('gameOver').classList.remove('hidden');
             crosshair.style.display = 'none';
+            document.getElementById('rocketCrate').style.display = 'none';
+            document.getElementById('rocketMode').style.display = 'none';
         }
 
         function restartGame() {
