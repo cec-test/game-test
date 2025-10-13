@@ -334,14 +334,17 @@
             // Randomly choose which lane to spawn in (0 or 1)
             const lane = Math.random() > 0.5 ? 1 : 0;
             
-            // RULE: Lane 0 gets 0s, Lane 1 gets 1s (ALWAYS!)
-            let value, xPos;
-            if (lane === 0) {
-                value = 0; // Lane 0 = only 0s
-                xPos = LANE_WIDTH / 2; // Center of left lane
-            } else {
-                value = 1; // Lane 1 = only 1s
-                xPos = LANE_WIDTH + LANE_WIDTH / 2; // Center of right lane
+            // ABSOLUTE RULE: Lane number MUST equal digit value
+            // Lane 0 (LEFT) = 0s only, Lane 1 (RIGHT) = 1s only
+            const value = lane; // Force value to match lane
+            
+            // Calculate X position based on lane
+            const xPos = (lane === 0) ? (LANE_WIDTH / 2) : (LANE_WIDTH + LANE_WIDTH / 2);
+            
+            // Failsafe: Double-check the rule
+            if (value !== lane) {
+                console.error('BUG: Value does not match lane!', {value, lane});
+                return; // Don't spawn if rule is broken
             }
             
             gameState.digits.push({
@@ -430,11 +433,15 @@
             gameState.speed = 200 + timeTier * 100;
             gameState.spawnRate = Math.max(20, 60 - timeTier * 10);
 
-            // Spawn digits
-            gameState.spawnTimer++;
-            if (gameState.spawnTimer >= gameState.spawnRate) {
-                spawnDigit();
-                gameState.spawnTimer = 0;
+            // Spawn digits (only after initial 3 second delay)
+            if (gameState.initialDelay > 0) {
+                gameState.initialDelay -= deltaTime;
+            } else {
+                gameState.spawnTimer++;
+                if (gameState.spawnTimer >= gameState.spawnRate) {
+                    spawnDigit();
+                    gameState.spawnTimer = 0;
+                }
             }
 
             // Update digits
@@ -577,6 +584,11 @@
             ctx.textBaseline = 'middle';
             
             gameState.digits.forEach(digit => {
+                // Failsafe: Ensure digit value matches its lane
+                if (digit.value !== digit.lane) {
+                    console.error('RENDER BUG: Digit value does not match lane!', digit);
+                }
+                
                 const color = digit.lane === 0 ? '#00ffff' : '#ffaa00';
                 const size = 60 - (digit.y / canvas.height) * 10; // Size decreases with distance
                 
