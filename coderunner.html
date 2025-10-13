@@ -212,12 +212,13 @@
             <div id="startScreen" class="start-screen">
                 <h2>▶ CODE RUNNER ◀</h2>
                 <div class="instructions">
-                    <p>⚡ Navigate through binary data streams</p>
-                    <p>🎯 Match your lane to incoming digits:</p>
-                    <p style="color: #00ffff;">▸ Be in Lane 0 when 0 arrives</p>
-                    <p style="color: #ffaa00;">▸ Be in Lane 1 when 1 arrives</p>
-                    <p>⌨️ TAP or SPACEBAR to switch lanes</p>
-                    <p>💥 Wrong match = Game Over</p>
+                    <p>⚡ Binary digits flow down each lane</p>
+                    <p>🎯 Guitar Hero style gameplay:</p>
+                    <p style="color: #00ffff;">▸ 0s come down Lane 0</p>
+                    <p style="color: #ffaa00;">▸ 1s come down Lane 1</p>
+                    <p>⌨️ TAP/SPACE to switch lanes</p>
+                    <p>✨ Be in correct lane when digit hits zone!</p>
+                    <p>💥 Wrong lane = Game Over</p>
                 </div>
                 <button id="startBtn">⚡ START ⚡</button>
                 <button class="button-secondary" onclick="window.location.href='index.html'">◀ BACK</button>
@@ -330,8 +331,10 @@
         startBtn.addEventListener('click', startGame);
 
         function spawnDigit() {
-            const value = Math.random() > 0.5 ? 1 : 0;
+            // Randomly choose which lane to spawn in
             const lane = Math.random() > 0.5 ? 1 : 0;
+            // Digit value ALWAYS matches its lane (0s in Lane 0, 1s in Lane 1)
+            const value = lane;
             
             gameState.digits.push({
                 value: value,
@@ -434,12 +437,13 @@
                 const digit = gameState.digits[i];
                 digit.y += gameState.speed * deltaTime;
 
-                // Check collision
+                // Check if digit enters hit zone
                 if (!digit.checked && digit.y >= PLAYER_Y - COLLISION_THRESHOLD && digit.y <= PLAYER_Y + COLLISION_THRESHOLD) {
                     digit.checked = true;
                     
-                    if (digit.lane === gameState.playerLane && digit.value === gameState.playerLane) {
-                        // CORRECT MATCH!
+                    // Check if player is in the CORRECT lane (must match digit's lane)
+                    if (digit.lane === gameState.playerLane) {
+                        // HIT! Player in correct lane
                         gameState.combo++;
                         gameState.maxCombo = Math.max(gameState.maxCombo, gameState.combo);
                         
@@ -461,10 +465,12 @@
                             playSound(1000, 0.2, 'triangle');
                         }
                     } else {
-                        // WRONG MATCH - GAME OVER
+                        // MISS! Player in wrong lane - GAME OVER
                         createMatchParticles(digit.x, digit.y, false);
                         gameState.screenShake = 40;
                         playSound(100, 0.5, 'sawtooth');
+                        gameState.combo = 0;
+                        comboElement.textContent = 'x0';
                         endGame();
                         return;
                     }
@@ -592,6 +598,15 @@
             // Player glow
             ctx.shadowBlur = 40;
             ctx.shadowColor = playerColor;
+            
+            // Hit zone indicator (where you catch digits)
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.lineWidth = 3;
+            ctx.setLineDash([10, 5]);
+            ctx.beginPath();
+            ctx.rect(0, PLAYER_Y - COLLISION_THRESHOLD, canvas.width, COLLISION_THRESHOLD * 2);
+            ctx.stroke();
+            ctx.setLineDash([]);
             
             // Player diamond shape
             ctx.fillStyle = playerColor;
