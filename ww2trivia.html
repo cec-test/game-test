@@ -20,18 +20,23 @@
             font-family: 'Orbitron', sans-serif;
             background: linear-gradient(135deg, #1a1a1a, #2d2d2d);
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            overflow: hidden;
-            touch-action: none;
+            overflow-x: hidden;
+            overflow-y: auto;
+            touch-action: pan-y;
         }
 
         .container {
             text-align: center;
             padding: 0;
             position: relative;
-            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
         }
 
         h1 {
