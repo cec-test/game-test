@@ -614,29 +614,6 @@
             return newAchievements;
         }
 
-        function renderAchievements() {
-            const container = document.getElementById('achievements');
-            const unlockedAchievements = JSON.parse(localStorage.getItem('achievements') || '[]');
-            
-            container.innerHTML = '';
-            ACHIEVEMENTS.forEach(achievement => {
-                const div = document.createElement('div');
-                div.className = 'achievement';
-                if (unlockedAchievements.includes(achievement.id)) {
-                    div.classList.add('unlocked');
-                }
-                
-                div.innerHTML = `
-                    <div class="achievement-icon">${achievement.icon}</div>
-                    <div style="flex: 1; text-align: left;">
-                        <div style="font-weight: bold;">${achievement.name}</div>
-                        <div style="font-size: 0.8em; color: #888;">${achievement.desc}</div>
-                    </div>
-                `;
-                
-                container.appendChild(div);
-            });
-        }
 
         // ===== DAILY CHALLENGE =====
         function getDailyChallenge() {
@@ -658,23 +635,6 @@
             return { ...challenge, today, isCompleted };
         }
 
-        function updateDailyChallenge(stats) {
-            const challenge = getDailyChallenge();
-            const progress = stats[challenge.key] || 0;
-            
-            document.getElementById('dailyChallengeText').textContent = challenge.desc;
-            document.getElementById('dailyChallengeProgress').textContent = 
-                challenge.isCompleted ? '✅ COMPLETED!' : `Progress: ${Math.min(progress, challenge.target)}/${challenge.target}`;
-            
-            if (progress >= challenge.target && !challenge.isCompleted) {
-                const completed = JSON.parse(localStorage.getItem('dailyChallenges') || '{}');
-                completed[challenge.today] = true;
-                localStorage.setItem('dailyChallenges', JSON.stringify(completed));
-                return true;
-            }
-            
-            return false;
-        }
 
         // ===== LEADERBOARD =====
         function saveScore(score, combo) {
@@ -713,19 +673,7 @@
         }
 
         // ===== MENU =====
-        function showMenu() {
-            document.getElementById('menuScreen').classList.remove('hidden');
-            document.getElementById('gameOver').classList.add('hidden');
-            document.getElementById('startScreen').classList.add('hidden');
-            renderLeaderboard();
-            renderThemeSelector();
-            renderAchievements();
-        }
 
-        function hideMenu() {
-            document.getElementById('menuScreen').classList.add('hidden');
-            document.getElementById('startScreen').classList.remove('hidden');
-        }
 
         // ===== MOBILE DETECTION =====
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
@@ -1408,7 +1356,6 @@
             }
             
             // Update daily challenge
-            const challengeCompleted = updateDailyChallenge({
                 score: gameState.score,
                 maxCombo: gameState.maxCombo,
                 nearMisses: gameState.nearMisses,
@@ -1437,7 +1384,6 @@
 
         // Initialize
         applyTheme(currentTheme);
-        updateDailyChallenge({});
         drawGame();
 
         // Update UI for mobile
