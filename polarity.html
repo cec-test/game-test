@@ -423,7 +423,6 @@
                     <p>MAX COMBO: <span id="finalCombo" style="color: var(--theme-color2, #00ffff);">0</span>x</p>
                     <p>HIGH SCORE: <span id="displayHighScore" style="color: #ffff00;">0</span></p>
                 </div>
-                <div id="newAchievements"></div>
                 <div style="margin: 20px 0;">
                     <button id="playAgainBtn" onclick="startGame()">🔄 PLAY AGAIN 🔄</button>
                     <button class="button-secondary" onclick="window.location.href='index.html'">◀ BACK TO MENU</button>
@@ -616,24 +615,6 @@
 
 
         // ===== DAILY CHALLENGE =====
-        function getDailyChallenge() {
-            const today = new Date().toDateString();
-            const challenges = [
-                { desc: 'Get 10 INSANE near misses', target: 10, key: 'insaneNearMisses' },
-                { desc: 'Reach a 30x combo', target: 30, key: 'maxCombo' },
-                { desc: 'Score 500 points', target: 500, key: 'score' },
-                { desc: 'Get 20 near misses', target: 20, key: 'nearMisses' },
-                { desc: 'Switch sides 50 times', target: 50, key: 'switches' }
-            ];
-            
-            const dayIndex = new Date().getDate() % challenges.length;
-            const challenge = challenges[dayIndex];
-            
-            const completed = JSON.parse(localStorage.getItem('dailyChallenges') || '{}');
-            const isCompleted = completed[today] === true;
-            
-            return { ...challenge, today, isCompleted };
-        }
 
 
         // ===== LEADERBOARD =====
@@ -1340,34 +1321,6 @@
                 highScore,
                 maxCombo: Math.max(gameState.maxCombo, parseInt(localStorage.getItem('maxCombo') || '0')),
                 gamesPlayed,
-                totalSwitches,
-                totalNearMisses
-            };
-            localStorage.setItem('maxCombo', stats.maxCombo);
-            
-            const newAchievements = checkAchievements(stats);
-            const achievementsDiv = document.getElementById('newAchievements');
-            if (newAchievements.length > 0) {
-                achievementsDiv.innerHTML = '<h3 style="color: #00ff88; margin: 20px 0;">🎉 NEW ACHIEVEMENTS!</h3>' +
-                    newAchievements.map(a => `<p style="font-size: 1.2em;">${a.icon} ${a.name}</p>`).join('');
-                newAchievements.forEach(() => playSound('combo'));
-            } else {
-                achievementsDiv.innerHTML = '';
-            }
-            
-            // Update daily challenge
-                score: gameState.score,
-                maxCombo: gameState.maxCombo,
-                nearMisses: gameState.nearMisses,
-                insaneNearMisses: gameState.insaneNearMisses,
-                switches: gameState.switches
-            });
-            
-            if (challengeCompleted) {
-                achievementsDiv.innerHTML += '<p style="color: #ffd700; font-size: 1.3em; margin-top: 0;">⭐ DAILY CHALLENGE COMPLETED! ⭐</p>';
-                playSound('combo');
-            }
-            
             setTimeout(() => {
                 gameOverScreen.classList.remove('hidden');
             }, 200);
