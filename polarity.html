@@ -423,6 +423,7 @@
                     <p>MAX COMBO: <span id="finalCombo" style="color: var(--theme-color2, #00ffff);">0</span>x</p>
                     <p>HIGH SCORE: <span id="displayHighScore" style="color: #ffff00;">0</span></p>
                 </div>
+                <div id="newAchievements"></div>
                 <div style="margin: 20px 0;">
                     <button id="playAgainBtn" onclick="startGame()">🔄 PLAY AGAIN 🔄</button>
                     <button class="button-secondary" onclick="window.location.href='index.html'">◀ BACK TO MENU</button>
@@ -433,11 +434,39 @@
             <!-- Start Screen -->
             <div id="startScreen" class="start-screen">
                 <h2>◤ POLARITY ◢</h2>
+                <div id="dailyChallengeBox" class="daily-challenge">
+                    <h3>⭐ TODAY'S CHALLENGE</h3>
+                    <p id="dailyChallengeText">Loading...</p>
+                    <p id="dailyChallengeProgress" style="font-size: 0.9em; color: #888;"></p>
+                </div>
                 <p id="startInstructions1">▸ PRESS SPACE TO SWITCH (+5) ◂</p>
                 <p>▸ NEAR MISS = BONUS POINTS ◂</p>
                 <p>▸ BUILD MASSIVE COMBOS ◂</p>
                 <button id="startBtn">⚡ START ⚡</button>
-                <button class="button-secondary" onclick="window.location.href='index.html'">◀ BACK TO MENU</button>
+                <button class="button-secondary" onclick="showMenu()">MENU</button>
+            </div>
+            
+            <!-- Menu Screen -->
+            <div id="menuScreen" class="menu-screen hidden">
+                <h2>MENU</h2>
+                
+                <div style="margin: 30px 0;">
+                    <h3 style="color: var(--theme-color1, #ff00ff); margin-bottom: 20px;">🏆 LEADERBOARD</h3>
+                    <div class="leaderboard" id="leaderboard"></div>
+                </div>
+                
+                <div style="margin: 30px 0;">
+                    <h3 style="color: var(--theme-color2, #00ffff); margin-bottom: 20px;">🎨 THEMES</h3>
+                    <p style="font-size: 0.9em; color: #888; margin-bottom: 15px;">Unlock themes by reaching score milestones!</p>
+                    <div class="theme-selector" id="themeSelector"></div>
+                </div>
+                
+                <div style="margin: 30px 0;">
+                    <h3 style="color: #ffff00; margin-bottom: 20px;">🏅 ACHIEVEMENTS</h3>
+                    <div class="achievements" id="achievements"></div>
+                </div>
+                
+                <button onclick="hideMenu()">BACK</button>
             </div>
         </div>
         <div class="info">
@@ -555,19 +584,176 @@
             localStorage.setItem('currentTheme', themeName);
         }
 
+        function renderThemeSelector() {
+            const highScore = parseInt(localStorage.getItem('polarityHighScore')) || 0;
+            const selector = document.getElementById('themeSelector');
+            selector.innerHTML = '';
+            
+            Object.entries(THEMES).forEach(([key, theme]) => {
+                const div = document.createElement('div');
+                div.className = 'theme-option';
+                div.style.background = `linear-gradient(135deg, ${theme.color1}, ${theme.color2})`;
+                
+                const unlocked = highScore >= theme.unlock;
+                if (!unlocked) div.classList.add('locked');
+                if (key === currentTheme) div.classList.add('selected');
+                
+                div.title = `${theme.name} - ${unlocked ? 'Unlocked!' : 'Unlock at ' + theme.unlock + ' points'}`;
+                
+                if (unlocked) {
+                    div.onclick = () => {
+                        applyTheme(key);
+                        renderThemeSelector();
+                    };
+                }
+                
+                selector.appendChild(div);
+            });
+        }
 
         // ===== ACHIEVEMENTS =====
+        const ACHIEVEMENTS = [
+            { id: 'first_game', name: 'First Steps', desc: 'Play your first game', icon: '🎮', check: (stats) => stats.gamesPlayed >= 1 },
+            { id: 'score_100', name: 'Century', desc: 'Score 100 points', icon: '💯', check: (stats) => stats.highScore >= 100 },
+            { id: 'score_500', name: 'Veteran', desc: 'Score 500 points', icon: '⭐', check: (stats) => stats.highScore >= 500 },
+            { id: 'score_1000', name: 'Master', desc: 'Score 1000 points', icon: '👑', check: (stats) => stats.highScore >= 1000 },
+            { id: 'combo_20', name: 'Combo King', desc: 'Get a 20x combo', icon: '🔥', check: (stats) => stats.maxCombo >= 20 },
+            { id: 'combo_50', name: 'Unstoppable', desc: 'Get a 50x combo', icon: '⚡', check: (stats) => stats.maxCombo >= 50 },
+            { id: 'near_miss_50', name: 'Close Shave', desc: 'Get 50 near misses', icon: '😰', check: (stats) => stats.totalNearMisses >= 50 },
+            { id: 'switches_100', name: 'Switch Master', desc: 'Switch 100 times', icon: '🔄', check: (stats) => stats.totalSwitches >= 100 },
+            { id: 'games_10', name: 'Dedicated', desc: 'Play 10 games', icon: '🎯', check: (stats) => stats.gamesPlayed >= 10 }
+        ];
 
+        function checkAchievements(stats) {
+            const unlockedAchievements = JSON.parse(localStorage.getItem('achievements') || '[]');
+            const newAchievements = [];
+            
+            ACHIEVEMENTS.forEach(achievement => {
+                if (!unlockedAchievements.includes(achievement.id) && achievement.check(stats)) {
+                    unlockedAchievements.push(achievement.id);
+                    newAchievements.push(achievement);
+                }
+            });
+            
+            if (newAchievements.length > 0) {
+                localStorage.setItem('achievements', JSON.stringify(unlockedAchievements));
+            }
+            
+            return newAchievements;
+        }
 
+        function renderAchievements() {
+            const container = document.getElementById('achievements');
+            const unlockedAchievements = JSON.parse(localStorage.getItem('achievements') || '[]');
+            
+            container.innerHTML = '';
+            ACHIEVEMENTS.forEach(achievement => {
+                const div = document.createElement('div');
+                div.className = 'achievement';
+                if (unlockedAchievements.includes(achievement.id)) {
+                    div.classList.add('unlocked');
+                }
+                
+                div.innerHTML = `
+                    <div class="achievement-icon">${achievement.icon}</div>
+                    <div style="flex: 1; text-align: left;">
+                        <div style="font-weight: bold;">${achievement.name}</div>
+                        <div style="font-size: 0.8em; color: #888;">${achievement.desc}</div>
+                    </div>
+                `;
+                
+                container.appendChild(div);
+            });
+        }
 
         // ===== DAILY CHALLENGE =====
+        function getDailyChallenge() {
+            const today = new Date().toDateString();
+            const challenges = [
+                { desc: 'Get 10 INSANE near misses', target: 10, key: 'insaneNearMisses' },
+                { desc: 'Reach a 30x combo', target: 30, key: 'maxCombo' },
+                { desc: 'Score 500 points', target: 500, key: 'score' },
+                { desc: 'Get 20 near misses', target: 20, key: 'nearMisses' },
+                { desc: 'Switch sides 50 times', target: 50, key: 'switches' }
+            ];
+            
+            const dayIndex = new Date().getDate() % challenges.length;
+            const challenge = challenges[dayIndex];
+            
+            const completed = JSON.parse(localStorage.getItem('dailyChallenges') || '{}');
+            const isCompleted = completed[today] === true;
+            
+            return { ...challenge, today, isCompleted };
+        }
 
+        function updateDailyChallenge(stats) {
+            const challenge = getDailyChallenge();
+            const progress = stats[challenge.key] || 0;
+            
+            document.getElementById('dailyChallengeText').textContent = challenge.desc;
+            document.getElementById('dailyChallengeProgress').textContent = 
+                challenge.isCompleted ? '✅ COMPLETED!' : `Progress: ${Math.min(progress, challenge.target)}/${challenge.target}`;
+            
+            if (progress >= challenge.target && !challenge.isCompleted) {
+                const completed = JSON.parse(localStorage.getItem('dailyChallenges') || '{}');
+                completed[challenge.today] = true;
+                localStorage.setItem('dailyChallenges', JSON.stringify(completed));
+                return true;
+            }
+            
+            return false;
+        }
 
         // ===== LEADERBOARD =====
+        function saveScore(score, combo) {
+            const leaderboard = JSON.parse(localStorage.getItem('leaderboard') || '[]');
+            leaderboard.push({ score, combo, date: new Date().toISOString() });
+            leaderboard.sort((a, b) => b.score - a.score);
+            leaderboard.splice(10); // Keep top 10
+            localStorage.setItem('leaderboard', JSON.stringify(leaderboard));
+        }
 
+        function renderLeaderboard(currentScore = null) {
+            const leaderboard = JSON.parse(localStorage.getItem('leaderboard') || '[]');
+            const container = document.getElementById('leaderboard');
+            
+            if (leaderboard.length === 0) {
+                container.innerHTML = '<p style="color: #888;">No scores yet. Play to set a record!</p>';
+                return;
+            }
+            
+            container.innerHTML = '';
+            leaderboard.forEach((entry, i) => {
+                const div = document.createElement('div');
+                div.className = 'leaderboard-entry';
+                if (entry.score === currentScore) {
+                    div.classList.add('current');
+                }
+                
+                const rank = ['🥇', '🥈', '🥉'][i] || `${i + 1}.`;
+                div.innerHTML = `
+                    <span>${rank} ${entry.score} pts</span>
+                    <span style="color: #888;">${entry.combo}x combo</span>
+                `;
+                
+                container.appendChild(div);
+            });
+        }
 
         // ===== MENU =====
+        function showMenu() {
+            document.getElementById('menuScreen').classList.remove('hidden');
+            document.getElementById('gameOver').classList.add('hidden');
+            document.getElementById('startScreen').classList.add('hidden');
+            renderLeaderboard();
+            renderThemeSelector();
+            renderAchievements();
+        }
 
+        function hideMenu() {
+            document.getElementById('menuScreen').classList.add('hidden');
+            document.getElementById('startScreen').classList.remove('hidden');
+        }
 
         // ===== MOBILE DETECTION =====
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
@@ -1221,8 +1407,81 @@
             }
             displayHighScoreElement.textContent = highScore;
             
+            saveScore(gameState.score, gameState.maxCombo);
             
+            const gamesPlayed = parseInt(localStorage.getItem('gamesPlayed') || '0') + 1;
+            const totalSwitches = parseInt(localStorage.getItem('totalSwitches') || '0') + gameState.switches;
+            const totalNearMisses = parseInt(localStorage.getItem('totalNearMisses') || '0') + gameState.nearMisses;
             localStorage.setItem('gamesPlayed', gamesPlayed);
             localStorage.setItem('totalSwitches', totalSwitches);
             localStorage.setItem('totalNearMisses', totalNearMisses);
             
+            const stats = {
+                highScore,
+                maxCombo: Math.max(gameState.maxCombo, parseInt(localStorage.getItem('maxCombo') || '0')),
+                gamesPlayed,
+                totalSwitches,
+                totalNearMisses
+            };
+            localStorage.setItem('maxCombo', stats.maxCombo);
+            
+            const newAchievements = checkAchievements(stats);
+            const achievementsDiv = document.getElementById('newAchievements');
+            if (newAchievements.length > 0) {
+                achievementsDiv.innerHTML = '<h3 style="color: #00ff88; margin: 20px 0;">🎉 NEW ACHIEVEMENTS!</h3>' +
+                    newAchievements.map(a => `<p style="font-size: 1.2em;">${a.icon} ${a.name}</p>`).join('');
+                newAchievements.forEach(() => playSound('combo'));
+            } else {
+                achievementsDiv.innerHTML = '';
+            }
+            
+            // Update daily challenge
+            const challengeCompleted = updateDailyChallenge({
+                score: gameState.score,
+                maxCombo: gameState.maxCombo,
+                nearMisses: gameState.nearMisses,
+                insaneNearMisses: gameState.insaneNearMisses,
+                switches: gameState.switches
+            });
+            
+            if (challengeCompleted) {
+                achievementsDiv.innerHTML += '<p style="color: #ffd700; font-size: 1.3em; margin-top: 0;">⭐ DAILY CHALLENGE COMPLETED! ⭐</p>';
+                playSound('combo');
+            }
+            
+            setTimeout(() => {
+                gameOverScreen.classList.remove('hidden');
+            }, 200);
+        }
+
+        function gameLoop() {
+            if (!gameState.isPlaying) return;
+            
+            updateGame();
+            drawGame();
+            
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Initialize
+        applyTheme(currentTheme);
+        updateDailyChallenge({});
+        drawGame();
+
+        // Update UI for mobile
+        if (isMobile) {
+            document.getElementById('startInstructions1').textContent = '▸ TAP SCREEN TO SWITCH (+5) ◂';
+            
+            // Adjust canvas size for mobile
+            const maxWidth = Math.min(400, window.innerWidth - 20);
+            const maxHeight = Math.min(600, window.innerHeight * 0.7);
+            const scale = Math.min(maxWidth / 400, maxHeight / 600);
+            
+            if (scale < 1) {
+                canvas.style.width = (400 * scale) + 'px';
+                canvas.style.height = (600 * scale) + 'px';
+            }
+        }
+    </script>
+</body>
+</html>
